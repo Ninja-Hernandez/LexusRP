@@ -35,7 +35,6 @@ jobs:
           cd LexusRP/LexusRP/sampserver/samp03
           nohup ./samp03svr > server.log 2>&1 &
           sleep 5
-          echo "✅ Server started"
 
       - name: Finish
-        run: echo "✅ All done. Connect to: lexusrp.duckdns.org:7777"
+        run: echo '✅ All done. Connect to: lexusrp.duckdns.org:7777'
