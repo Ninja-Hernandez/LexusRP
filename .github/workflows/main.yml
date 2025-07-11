@@ -30,24 +30,12 @@ jobs:
     - name: Add Ngrok Auth Token
       run: ./ngrok config add-authtoken 2zgPZNenzSYjTDNseaBz7BRTbYY_5XDmZur14W15WEoZwgWsp
 
-    - name: Update DuckDNS IP
-      run: |
-        mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
-        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
-
-    - name: Run ngrok TCP tunnel
-      run: |
-        nohup ./ngrok tcp 7777 > ngrok.log &
-        sleep 6
-        curl -s http://127.0.0.1:4040/api/tunnels > tunnels.json
-        cat tunnels.json
-
     - name: Run SAMP Server
       run: |
         chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
 
-    - name: Done
-      run: echo "✅ Server Started. Check ngrok.log and DuckDNS."
+    - name: Run ngrok TCP tunnel
+      run: |
+        nohup ./ngrok tcp 7777 --region=eu > ngrok.log &
