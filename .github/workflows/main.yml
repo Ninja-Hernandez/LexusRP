@@ -1,41 +1,41 @@
-name: Run SAMP Server with Ngrok + DuckDNS
+name: Run SAMP Server with DuckDNS + Auto Restart + Manual
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *" # هر ۶ ساعت یکبار خودکار اجرا
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
-    - name: Install dependencies
+    - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y unzip curl wget
+        sudo apt install -y unzip curl lib32gcc-s1
 
     - name: Unzip Server Files
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: Download ngrok
-      run: |
-        wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
-        unzip ngrok-stable-linux-amd64.zip
-        chmod +x ngrok
+    - name: Make Server Executable
+      run: chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
 
-    - name: Add Ngrok Auth Token
-      run: ./ngrok config add-authtoken 2zgPZNenzSYjTDNseaBz7BRTbYY_5XDmZur14W15WEoZwgWsp
+    - name: Update DuckDNS IP
+      run: |
+        mkdir -p ~/duckdns
+        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
+        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
     - name: Run SAMP Server
       run: |
-        chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
+        sleep 6
+        echo "✅ SAMP Server Started on port 7777"
 
-    - name: Run ngrok TCP tunnel
-      run: |
-        nohup ./ngrok tcp 7777 --region=eu > ngrok.log &
+    - name: Done
+      run: echo "✅ All setup completed. Visit: lexusrp.duckdns.org:7777"
