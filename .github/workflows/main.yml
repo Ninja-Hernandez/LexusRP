@@ -3,39 +3,39 @@ name: Run SAMP Server with DuckDNS + Auto Restart + Manual
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *" # هر ۶ ساعت یکبار خودکار اجرا
+    - cron: "0 */6 * * *"  # هر ۶ ساعت یکبار اجرا
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y unzip curl lib32gcc-s1
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y unzip curl lib32gcc-s1
 
-    - name: Unzip Server Files
-      run: unzip -o LexusRP.zip -d LexusRP
+      - name: Unzip Server Files
+        run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: Make Server Executable
-      run: chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
+      - name: Make Server Executable
+        run: chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
 
-    - name: Update DuckDNS IP
-      run: |
-        mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
-        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
+      - name: Update DuckDNS IP
+        run: |
+          mkdir -p ~/duckdns
+          echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
+          curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-    - name: Run SAMP Server
-      run: |
-        cd LexusRP/LexusRP/sampserver/samp03
-        nohup ./samp03svr > server.log 2>&1 &
-        sleep 6
-        echo "✅ SAMP Server Started on port 7777"
+      - name: Run SAMP Server
+        run: |
+          cd LexusRP/LexusRP/sampserver/samp03
+          nohup ./samp03svr > server.log 2>&1 &
+          sleep 6
+          echo "✅ SAMP Server Started on port 7777"
 
-    - name: Done
-      run: echo "✅ All setup completed. Visit: lexusrp.duckdns.org:7777"
+      - name: Done
+        run: echo "✅ All setup completed. Join: lexusrp.duckdns.org:7777"
