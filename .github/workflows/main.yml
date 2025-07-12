@@ -19,8 +19,7 @@ jobs:
         run: |
           wget https://github.com/Ninja-Hernandez/LexusRP/raw/main/LexusRP.zip -O server.zip
           unzip server.zip
-          cd LexusRP/LexusRP/sampserver/samp03
-          chmod +x samp03svr
+          chmod +x LexusRP/LexusRP/sampserver/samp03
 
       - name: نصب و اجرای Ngrok
         run: |
@@ -42,6 +41,5 @@ jobs:
 
       - name: اجرای سرور SAMP
         run: |
-          cd LexusRP/LexusRP/sampserver/samp03
-          screen -dmS samp ./samp03svr
+          screen -dmS samp ./LexusRP/LexusRP/sampserver/samp03
           sleep 300
