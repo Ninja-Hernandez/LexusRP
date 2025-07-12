@@ -1,7 +1,7 @@
 name: Run SAMP Server with Remote.it + DuckDNS
 
 on:
-  workflow_dispatch:  # اجرای دستی
+  workflow_dispatch:   # اجرای دستی
   schedule:
     - cron: "0 */6 * * *"  # اجرای خودکار هر 6 ساعت
 
@@ -27,12 +27,12 @@ jobs:
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
         curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-    - name: Install Remote.it CLI
+    - name: Install Remote.it CLI (x86_64)
       run: |
-        wget https://downloads.remote.it/cli/remoteit-cli-linux-arm64.gz
-        gunzip remoteit-cli-linux-arm64.gz
-        chmod +x remoteit-cli-linux-arm64
-        sudo mv remoteit-cli-linux-arm64 /usr/local/bin/remoteit
+        wget https://downloads.remote.it/cli/remoteit-cli-linux-x86_64.gz
+        gunzip remoteit-cli-linux-x86_64.gz
+        chmod +x remoteit-cli-linux-x86_64
+        sudo mv remoteit-cli-linux-x86_64 /usr/local/bin/remoteit
 
     - name: Login to Remote.it
       run: |
