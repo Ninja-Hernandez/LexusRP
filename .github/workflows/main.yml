@@ -1,42 +1,29 @@
-name: Run SAMP Server with Remote.it + DuckDNS + Auto Restart
+name: Run SAMP Server with DuckDNS
 
 on:
-  workflow_dispatch:  # اجرای دستی
+  workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # هر 6 ساعت اجرای خودکار
+    - cron: "0 */6 * * *"  # هر 6 ساعت یکبار ران میشه
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y unzip curl wget
+    - name: Install dependencies
+      run: sudo apt update && sudo apt install -y unzip curl
 
-    - name: Unzip SAMP Server Files
+    - name: Unzip Server
       run: unzip -o LexusRP.zip -d LexusRP
 
     - name: Update DuckDNS IP
       run: |
         mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
+        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=ab12cd34ef56gh78ij90kl12mn34op56&ip=" > ~/duckdns/duck.conf
         curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
-
-        - name: Download and Install Remote.it CLI
-      run: |
-        wget https://github.com/remoteit/cli/releases/latest/download/remoteit-linux-x64.gz -O remoteit.gz
-        gunzip -f remoteit.gz
-        chmod +x remoteit
-        sudo mv remoteit /usr/local/bin/remoteit
-
-    - name: Login to Remote.it
-      run: |
-        remoteit login --email "parsabakhtazad1@gmail.com" --password "1234567"
 
     - name: Run SAMP Server
       run: |
@@ -44,11 +31,5 @@ jobs:
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
 
-    - name: Register Port in Remote.it
-      run: |
-        remoteit add --name "LexusRP SAMP" --port 7777 --type tcp
-
-    - name: Success Message
-      run: |
-        echo "✅ سرور با موفقیت ران شد و به Remote.it متصل شد"
-        echo "🌍 برای ورود به سرور: lexusrp.duckdns.org:7777"
+    - name: Done
+      run: echo "✅ Server started on LexusRP.duckdns.org:7777"
