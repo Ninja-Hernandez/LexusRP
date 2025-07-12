@@ -25,12 +25,12 @@ jobs:
 
       - name: اجرای سرور SAMP و ذخیره لاگ
         run: |
-          chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
-          cd LexusRP/LexusRP/sampserver/samp03
+          chmod +x LexusRP/sampserver/samp03/samp03svr
+          cd LexusRP/sampserver/samp03
           nohup ./samp03svr > server.log 2>&1 &
 
       - name: نمایش لاگ‌های سرور (آخرین 50 خط)
-        run: tail -n 50 LexusRP/LexusRP/sampserver/samp03/server.log
+        run: tail -n 50 LexusRP/sampserver/samp03/server.log
 
       - name: سرور راه‌اندازی شد
         run: echo "✅ سرور روی lexusrp.duckdns.org:7777 اجرا شد"
