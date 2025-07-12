@@ -3,14 +3,14 @@ name: Run SAMP Server with Remote.it + DuckDNS + Auto Restart
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # هر ۶ ساعت یک‌بار خودکار اجرا شود
+    - cron: "0 */6 * * *"  # هر ۶ ساعت خودکار ران بشه
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Install Dependencies
@@ -29,7 +29,7 @@ jobs:
 
     - name: Install Remote.it CLI
       run: |
-        wget https://github.com/remoteit/installer/releases/latest/download/remoteit -O remoteit
+        wget https://downloads.remote.it/cli/remoteit -O remoteit
         chmod +x remoteit
         sudo mv remoteit /usr/local/bin/remoteit
 
@@ -43,11 +43,11 @@ jobs:
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
 
-    - name: Register Port on Remote.it
+    - name: Register Port in Remote.it
       run: |
         remoteit add --name "LexusRP SAMP" --port 7777 --type tcp
 
     - name: Success Message
       run: |
-        echo "✅ سرور با موفقیت ران شد"
-        echo "🌐 IP عمومی از Remote.it و آدرس شما: http://lexusrp.duckdns.org:7777"
+        echo "✅ سرور با موفقیت ران شد و به Remote.it متصل شد"
+        echo "🌍 برای ورود به سرور: lexusrp.duckdns.org:7777"
