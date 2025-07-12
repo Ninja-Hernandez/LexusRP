@@ -27,7 +27,7 @@ jobs:
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
         curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-        - name: Install Remote.it CLI (x86_64)
+    - name: Install Remote.it CLI (x86_64)
       run: |
         curl -L https://github.com/remoteit/installer/releases/latest/download/remoteit -o remoteit
         chmod +x remoteit
@@ -45,6 +45,7 @@ jobs:
 
     - name: Register Port in Remote.it
       run: |
+        cd LexusRP/LexusRP/sampserver/samp03
         remoteit add --name "LexusRP SAMP" --port 7777 --type tcp
 
     - name: Success Message
