@@ -1,24 +1,24 @@
-name: Run SAMP Server with Remote.it + DuckDNS
+name: Run SAMP Server with Remote.it + DuckDNS + Auto Restart
 
 on:
-  workflow_dispatch:   # اجرای دستی
+  workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # اجرای خودکار هر 6 ساعت
+    - cron: "0 */6 * * *"  # هر 6 ساعت خودکار ران میشه
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout repo
       uses: actions/checkout@v3
 
     - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y unzip curl wget gnupg
+        sudo apt install -y unzip curl wget
 
-    - name: Unzip SAMP Server
+    - name: Unzip SAMP Server Files
       run: unzip -o LexusRP.zip -d LexusRP
 
     - name: Update DuckDNS IP
@@ -29,22 +29,13 @@ jobs:
 
     - name: Install Remote.it CLI (x86_64)
       run: |
-        wget https://downloads.remote.it/cli/remoteit-cli-linux-x86_64.gz
-        gunzip remoteit-cli-linux-x86_64.gz
-        chmod +x remoteit-cli-linux-x86_64
-        sudo mv remoteit-cli-linux-x86_64 /usr/local/bin/remoteit
+        curl -L https://downloads.remote.it/cli/remoteit-cli-linux-x86_64 -o remoteit
+        chmod +x remoteit
+        sudo mv remoteit /usr/local/bin/remoteit
 
     - name: Login to Remote.it
       run: |
-        remoteit logout || true
-        remoteit login --email Parsabakhtazad1@gmail.com --password ${{ secrets.REMOTEIT_PASS }}
-
-    - name: Register Remote.it Device + Port 7777
-      run: |
-        remoteit agent start
-        remoteit device register --name "LexusSAMP" --type generic
-        remoteit service add --name "SAMP7777" --port 7777 --host 127.0.0.1 --type tcp
-        remoteit agent restart
+        remoteit login --email "parsabakhtazad1@gmail.com" --password "1234567"
 
     - name: Run SAMP Server
       run: |
@@ -52,5 +43,11 @@ jobs:
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
 
-    - name: Done
-      run: echo "✅ Server started successfully at http://lexusrp.duckdns.org:7777"
+    - name: Register Port in Remote.it
+      run: |
+        remoteit add --name "LexusRP SAMP" --port 7777 --type tcp
+
+    - name: Success Message
+      run: |
+        echo "✅ سرور با موفقیت ران شد و به Remote.it متصل شد"
+        echo "🌍 برای ورود به سرور: lexusrp.duckdns.org:7777"
