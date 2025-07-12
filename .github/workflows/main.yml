@@ -3,7 +3,7 @@ name: Run SAMP Server with Remote.it + DuckDNS + Auto Restart
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # هر 6 ساعت خودکار ران میشه
+    - cron: "0 */6 * * *"  # هر 6 ساعت به‌صورت خودکار اجرا میشه
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y unzip curl wget
+        sudo apt install -y unzip curl wget gzip
 
     - name: Unzip SAMP Server Files
       run: unzip -o LexusRP.zip -d LexusRP
@@ -29,7 +29,8 @@ jobs:
 
     - name: Install Remote.it CLI (x86_64)
       run: |
-        curl -L https://github.com/remoteit/installer/releases/latest/download/remoteit -o remoteit
+        wget https://downloads.remote.it/cli/remoteit-cli-linux-x86_64.gz -O remoteit.gz
+        gunzip remoteit.gz
         chmod +x remoteit
         sudo mv remoteit /usr/local/bin/remoteit
 
@@ -45,7 +46,6 @@ jobs:
 
     - name: Register Port in Remote.it
       run: |
-        cd LexusRP/LexusRP/sampserver/samp03
         remoteit add --name "LexusRP SAMP" --port 7777 --type tcp
 
     - name: Success Message
