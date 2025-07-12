@@ -1,40 +1,45 @@
-name: Run SAMP Server with DuckDNS + Auto Restart + Manual
+name: Run SAMP Server with Remote.it + DuckDNS
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"  # هر ۶ ساعت یکبار سرور خودکار اجرا شود
 
 jobs:
-  build:
+  run-samp-server:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: 📥 دریافت فایل مخزن
+      uses: actions/checkout@v3
 
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y unzip curl lib32gcc-s1
+    - name: 🧩 نصب ابزارهای لازم
+      run: |
+        sudo apt update
+        sudo apt install -y unzip curl wget
 
-      - name: Unzip Server Files
-        run: unzip -o LexusRP.zip -d LexusRP
+    - name: 📦 استخراج فایل سرور
+      run: unzip -o LexusRP.zip -d LexusRP
 
-      - name: Make Server Executable
-        run: chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
+    - name: 🌍 بروزرسانی آی‌پی در DuckDNS
+      run: |
+        mkdir -p ~/duckdns
+        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
+        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-      - name: Update DuckDNS IP
-        run: |
-          mkdir -p $HOME/duckdns
-          echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > $HOME/duckdns/duck.conf
-          curl -k -o $HOME/duckdns/duck.log -K $HOME/duckdns/duck.conf
+    - name: 🔌 اتصال به Remote.it
+      run: |
+        wget https://downloads.remote.it/remoteit/install.sh
+        chmod +x install.sh
+        sudo ./install.sh
+        remoteit login Parsabakhtazad1@gmail.com --create-token
+        remoteit add --name "LexusSAMP" --port 7777 --type tcp --force
 
-      - name: Run SAMP Server
-        run: |
-          cd LexusRP/LexusRP/sampserver/samp03
-          nohup ./samp03svr > server.log 2>&1 &
-          sleep 5
+    - name: 🚀 اجرای سرور SAMP
+      run: |
+        chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
+        cd LexusRP/LexusRP/sampserver/samp03
+        nohup ./samp03svr > server.log 2>&1 &
 
-      - name: Finish
-        run: echo "✅ Server started successfully at http://lexusrp.duckdns.org:7777"
+    - name: ✅ پایان سریع
+      run: echo "✅ Server started successfully at http://lexusrp.duckdns.org:7777"
