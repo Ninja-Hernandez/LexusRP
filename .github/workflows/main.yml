@@ -1,53 +1,53 @@
 name: Run SAMP Server with Remote.it + DuckDNS + Auto Restart
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # قابلیت اجرای دستی
   schedule:
-    - cron: "0 */6 * * *"  # هر ۶ ساعت خودکار ران بشه
+    - cron: "0 */6 * * *"  # هر ۶ ساعت خودکار اجرا میشه
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: 📁 Checkout Repo
       uses: actions/checkout@v3
 
-    - name: Install Dependencies
+    - name: ⚙️ نصب ابزارهای مورد نیاز
       run: |
         sudo apt update
         sudo apt install -y unzip curl wget
 
-    - name: Unzip SAMP Server Files
+    - name: 📦 استخراج فایل‌های سرور
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: Update DuckDNS IP
+    - name: 🌐 بروزرسانی آی‌پی در DuckDNS
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
         curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-    - name: Install Remote.it CLI
+    - name: ⬇️ نصب Remote.it CLI
       run: |
-        wget https://downloads.remote.it/cli/remoteit -O remoteit
+        wget https://github.com/remoteit/cli/releases/latest/download/remoteit-linux-x64 -O remoteit
         chmod +x remoteit
         sudo mv remoteit /usr/local/bin/remoteit
 
-    - name: Login to Remote.it
+    - name: 🔐 ورود به Remote.it
       run: |
         remoteit login --email "parsabakhtazad1@gmail.com" --password "1234567"
 
-    - name: Run SAMP Server
+    - name: 🖥️ اجرای سرور SAMP
       run: |
         chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
 
-    - name: Register Port in Remote.it
+    - name: 🔌 ثبت پورت 7777 در Remote.it
       run: |
         remoteit add --name "LexusRP SAMP" --port 7777 --type tcp
 
-    - name: Success Message
+    - name: ✅ موفقیت
       run: |
         echo "✅ سرور با موفقیت ران شد و به Remote.it متصل شد"
-        echo "🌍 برای ورود به سرور: lexusrp.duckdns.org:7777"
+        echo "🌍 وارد شوید با: lexusrp.duckdns.org:7777"
