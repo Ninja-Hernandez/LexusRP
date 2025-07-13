@@ -19,16 +19,14 @@ jobs:
           git clone https://github.com/pawn-lang/compiler.git
           cd compiler/source
           make
-          sudo cp pawno /usr/local/bin/pawncc
 
       - name: Compile .pwn to .amx
         run: |
-          mkdir -p compiled
-          pawncc LexusRP.pwn -o compiled/LexusRP.amx
+          ./compiler/source/pawncc LexusRP.pwn -o compiled/LexusRP.amx
+        working-directory: ${{ github.workspace }}
 
       - name: Upload .amx
         uses: actions/upload-artifact@v3
         with:
           name: LexusRP-amx
           path: compiled/LexusRP.amx
-          // این یه تغییر کوچیکه برای اجرا شدن workflow
