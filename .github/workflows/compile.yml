@@ -31,3 +31,4 @@ jobs:
         with:
           name: LexusRP-amx
           path: compiled/LexusRP.amx
+          // این یه تغییر کوچیکه برای اجرا شدن workflow
