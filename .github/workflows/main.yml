@@ -1,72 +1,37 @@
-name: Run SAMP Server with LocalTunnel + DuckDNS
+- name: Run LocalTunnel + SAMP Server and Check Logs
+  run: |
+    # اجرای تونل
+    lt --port 7777 --subdomain lexusrp > tunnel.log 2>&1 &
+    sleep 10
+    echo "=== LocalTunnel Log (last 20 lines) ==="
+    tail -n 20 tunnel.log
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 */6 * * *"  # هر 6 ساعت سرور اتوماتیک ران میشه
+    # اجرای سرور
+    chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
+    chmod +x LexusRP/LexusRP/sampserver/samp03/announce
+    cd LexusRP/LexusRP/sampserver/samp03
+    nohup ./samp03svr > server.log 2>&1 &
+    sleep 10
+    echo "=== Server Log (last 40 lines) ==="
+    tail -n 40 server.log
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+    # بررسی ارورها
+    if grep -q "failed to load plugin" server.log; then
+      echo "⚠️ خطا: یکی از پلاگین‌ها بارگذاری نشده است!"
+    fi
 
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+    if grep -q "Could not bind to port" server.log; then
+      echo "⚠️ خطا: پورت 7777 اشغال شده یا در دسترس نیست!"
+    fi
 
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y unzip curl wget nodejs npm
-        sudo npm install -g localtunnel
+    if grep -q "gamemode load failed" server.log; then
+      echo "⚠️ خطا: مشکل در بارگذاری گیم‌مود!"
+    fi
 
-    - name: Unzip SAMP Server Files
-      run: unzip -o LexusRP.zip -d LexusRP
+    if ! grep -q "Server started" server.log; then
+      echo "⚠️ هشدار: سرور کامل راه‌اندازی نشده یا ممکن است گیر کرده باشد!"
+    fi
 
-    - name: Update DuckDNS IP
-      run: |
-        mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
-        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
-
-    - name: Run LocalTunnel + SAMP Server and Check Logs
-      run: |
-        # اجرای localtunnel و ذخیره لاگ
-        lt --port 7777 --subdomain lexusrp > tunnel.log 2>&1 &
-        sleep 10
-        echo "=== LocalTunnel Log (last 20 lines) ==="
-        tail -n 20 tunnel.log
-
-        # اجرای سرور SAMP و ذخیره لاگ
-        chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
-        cd LexusRP/LexusRP/sampserver/samp03
-        nohup ./samp03svr > server.log 2>&1 &
-        sleep 10
-        echo "=== Server Log (last 40 lines) ==="
-        tail -n 40 server.log
-
-        # چک کردن خطاهای رایج سرور
-        if grep -q "failed to load plugin" server.log; then
-          echo "⚠️ خطا: یکی از پلاگین‌ها بارگذاری نشده است!"
-        fi
-
-        if grep -q "Could not bind to port" server.log; then
-          echo "⚠️ خطا: پورت 7777 اشغال شده یا در دسترس نیست!"
-        fi
-
-        if grep -q "gamemode load failed" server.log; then
-          echo "⚠️ خطا: مشکل در بارگذاری گیم‌مود!"
-        fi
-
-        if ! grep -q "Server started" server.log; then
-          echo "⚠️ هشدار: سرور کامل راه‌اندازی نشده یا ممکن است گیر کرده باشد!"
-        fi
-
-        # چک کردن خطاهای تونل localtunnel
-        if grep -q "Error" tunnel.log; then
-          echo "⚠️ خطا: تونل LocalTunnel به درستی اجرا نشده است!"
-        fi
-
-    - name: ✅ Success Message
-      run: |
-        echo "✅ سرور با موفقیت ران شد!"
-        echo "🌍 وارد این آدرس‌ها شو: lexusrp.loca.lt:7777 یا lexusrp.duckdns.org:7777"
+    if grep -q "Error" tunnel.log; then
+      echo "⚠️ خطا: تونل LocalTunnel به درستی اجرا نشده است!"
+    fi
