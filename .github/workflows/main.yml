@@ -37,15 +37,15 @@ jobs:
 
     - name: 🔍 بررسی فایل‌های مهم
       run: |
-        chmod -R +x LexusRP/LexusRP/sampserver/samp03
+        chmod -R +x LexusRP/LexusRP/samp03svr
         echo "📁 Plugins:"
-        ls -l LexusRP/LexusRP/sampserver/samp03/plugins
+        ls -l LexusRP/LexusRP/plugins
         echo "📁 Gamemodes:"
-        ls -l LexusRP/LexusRP/sampserver/samp03/gamemodes
+        ls -l LexusRP/LexusRP/gamemodes
 
     - name: 🚀 اجرای سرور SAMP
       run: |
-        cd LexusRP/LexusRP/sampserver/samp03
+        cd LexusRP/LexusRP
         nohup ./samp03svr > server.log 2>&1 &
         sleep 5
         echo "📄 محتویات server.log (آخرین 40 خط):"
