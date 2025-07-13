@@ -1,0 +1,33 @@
+name: Compile LexusRP.pwn to AMX
+
+on:
+  push:
+    paths:
+      - '**.pwn'
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Pawn Compiler
+        run: |
+          sudo apt update
+          sudo apt install -y git build-essential
+          git clone https://github.com/pawn-lang/compiler.git
+          cd compiler/source
+          make
+          sudo cp pawno /usr/local/bin/pawncc
+
+      - name: Compile .pwn to .amx
+        run: |
+          mkdir -p compiled
+          pawncc LexusRP.pwn -o compiled/LexusRP.amx
+
+      - name: Upload .amx
+        uses: actions/upload-artifact@v3
+        with:
+          name: LexusRP-amx
+          path: compiled/LexusRP.amx
