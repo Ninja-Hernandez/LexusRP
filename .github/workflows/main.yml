@@ -57,6 +57,9 @@ jobs:
         grep -i "error" server.log || echo "✔️ error خاصی نبود"
         grep -i "started" server.log || echo "⚠️ احتمالا هنوز کامل ران نشده"
 
+        - name: بررسی نوع فایل samp03svr
+  run: file LexusRP/LexusRP/samp03svr
+
     - name: ✅ نتیجه نهایی
       run: |
         echo "✅ اگر همه چیز درست بود، وارد شو:"
