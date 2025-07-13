@@ -1,12 +1,10 @@
-name: Run SAMP Server with LocalTunnel + DuckDNS
+name: Run SA-MP Server via LocalTunnel + DuckDNS
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 */6 * * *"  # هر ۶ ساعت اجرا میشه
 
 jobs:
-  build:
+  run:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,51 +14,27 @@ jobs:
     - name: 🛠 نصب ابزارها
       run: |
         sudo apt update
-        sudo apt install -y unzip curl wget nodejs npm
+        sudo apt install -y unzip curl wget nodejs npm lib32z1 lib32ncurses6 screen
         sudo npm install -g localtunnel
 
-    - name: 📦 باز کردن فایل ZIP
+    - name: 📦 استخراج فایل ZIP
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 🌐 به‌روزرسانی آی‌پی DuckDNS
-      run: |
-        mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
-        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
-
-    - name: 🚇 اجرای LocalTunnel روی پورت 7777
-      run: |
-        lt --port 7777 --subdomain lexusrp > tunnel.log &
-        sleep 10
-        echo "=== LocalTunnel Log (last 20 lines) ==="
-        tail -n 20 tunnel.log
-
-    - name: 🔍 بررسی فایل‌های مهم
-      run: |
-        chmod -R +x LexusRP/LexusRP/samp03svr
-        echo "📁 Plugins:"
-        ls -l LexusRP/LexusRP/plugins
-        echo "📁 Gamemodes:"
-        ls -l LexusRP/LexusRP/gamemodes
+    - name: 🔓 اجرایی کردن samp03svr
+      run: chmod +x LexusRP/samp03svr
 
     - name: 🚀 اجرای سرور SAMP
       run: |
-        cd LexusRP/LexusRP
-        nohup ./samp03svr > server.log 2>&1 &
-        sleep 5
-        echo "📄 محتویات server.log (آخرین 40 خط):"
-        tail -n 40 server.log
+        cd LexusRP
+        screen -dmS samp ./samp03svr
 
-        echo "⚠️ بررسی خطاهای رایج:"
-        grep -i "plugin" server.log || echo "✔️ plugin مشکلی نداشت"
-        grep -i "gamemode" server.log || echo "✔️ gamemode مشکلی نداشت"
-        grep -i "error" server.log || echo "✔️ error خاصی نبود"
-        grep -i "started" server.log || echo "⚠️ احتمالا هنوز کامل ران نشده"
-
-        - name: بررسی نوع فایل samp03svr
-  run: file LexusRP/LexusRP/samp03svr
-
-    - name: ✅ نتیجه نهایی
+    - name: 🌍 اجرای LocalTunnel
       run: |
-        echo "✅ اگر همه چیز درست بود، وارد شو:"
-        echo "🌍 آدرس سرور: lexusrp.loca.lt:7777 یا lexusrp.duckdns.org:7777"
+        npx localtunnel --port 7777 --subdomain lexusrp > tunnel.log &
+        sleep 10
+        echo "=== LocalTunnel Log ==="
+        tail -n 20 tunnel.log
+
+    - name: 🦆 به‌روزرسانی DuckDNS
+      run: |
+        curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
