@@ -1,9 +1,9 @@
-name: Run SAMP Server with LocalTunnel + DuckDNS
+name: Run SAMP Server with LocalTunnel + DuckDNS + Debug
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # هر 6 ساعت اجرای خودکار
+    - cron: "0 */6 * * *"
 
 jobs:
   build:
@@ -22,54 +22,70 @@ jobs:
     - name: Unzip SAMP Server Files
       run: unzip -o LexusRP.zip -d LexusRP
 
+    - name: Check SAMP Files Before Run
+      run: |
+        echo "🔍 بررسی فایل‌های سرور بعد از unzip:"
+        ls -R LexusRP
+
     - name: Update DuckDNS IP
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
         curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-    - name: Run LocalTunnel + SAMP Server and Check Logs
+    - name: Run LocalTunnel + SAMP Server and Debug Logs
       run: |
+        set -x
+
         # اجرای localtunnel
         lt --port 7777 --subdomain lexusrp > tunnel.log 2>&1 &
         sleep 10
         echo "=== LocalTunnel Log (last 20 lines) ==="
-        tail -n 20 tunnel.log
+        tail -n 20 tunnel.log || echo "❌ tunnel.log پیدا نشد!"
 
-        # دادن دسترسی اجرا به فایل‌های مهم
-        chmod +x LexusRP/LexusRP/sampserver/samp03/samp03svr
-        chmod +x LexusRP/LexusRP/sampserver/samp03/announce
+        # دادن دسترسی اجرایی به تمام فایل‌های سرور
+        chmod -R +x LexusRP/LexusRP/sampserver/samp03
 
-        # اجرای سرور
+        echo "📁 بررسی فایل‌های plugins و gamemodes:"
+        ls -l LexusRP/LexusRP/sampserver/samp03/plugins || echo "❌ پوشه plugins پیدا نشد!"
+        ls -l LexusRP/LexusRP/sampserver/samp03/gamemodes || echo "❌ پوشه gamemodes پیدا نشد!"
+
+        echo "🚀 اجرای سرور"
         cd LexusRP/LexusRP/sampserver/samp03
         nohup ./samp03svr > server.log 2>&1 &
         sleep 10
 
-        echo "=== Server Log (last 40 lines) ==="
-        tail -n 40 server.log
-
-        # بررسی خطاهای رایج
-        if grep -q "failed to load plugin" server.log; then
-          echo "⚠️ خطا: یکی از پلاگین‌ها بارگذاری نشده است!"
+        echo "📄 بررسی فایل server.log"
+        if [ -f server.log ]; then
+          echo "✅ فایل server.log پیدا شد:"
+          tail -n 40 server.log
+        else
+          echo "❌ فایل server.log ساخته نشده!"
+          ls -l
         fi
 
-        if grep -q "Could not bind to port" server.log; then
-          echo "⚠️ خطا: پورت 7777 اشغال شده یا در دسترس نیست!"
+        echo "⚠️ بررسی خطاهای رایج در سرور"
+        if grep -q "failed to load plugin" server.log; then
+          echo "❌ خطا: پلاگین ناقص یا خراب"
         fi
 
         if grep -q "gamemode load failed" server.log; then
-          echo "⚠️ خطا: گیم‌مود در بارگذاری دچار مشکل شده!"
+          echo "❌ خطا: گیم‌مود بارگذاری نشده"
+        fi
+
+        if grep -q "Could not bind to port" server.log; then
+          echo "❌ خطا: پورت 7777 در دسترس نیست"
         fi
 
         if ! grep -q "Server started" server.log; then
-          echo "⚠️ هشدار: سرور کامل راه‌اندازی نشده یا ممکن است گیر کرده باشد!"
+          echo "⚠️ هشدار: سرور کامل اجرا نشده یا در LOADING گیر کرده!"
         fi
 
         if grep -q "Error" tunnel.log; then
-          echo "⚠️ خطا: تونل LocalTunnel به درستی اجرا نشده است!"
+          echo "❌ خطا: تونل LocalTunnel دچار مشکل شد"
         fi
 
     - name: ✅ Success Message
       run: |
-        echo "✅ سرور با موفقیت ران شد!"
-        echo "🌍 آدرس اتصال: lexusrp.loca.lt:7777 یا lexusrp.duckdns.org:7777"
+        echo "✅ اگر بالا اومده، وارد آدرس شو:"
+        echo "🌍 lexusrp.loca.lt:7777 یا lexusrp.duckdns.org:7777"
