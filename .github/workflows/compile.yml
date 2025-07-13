@@ -22,12 +22,11 @@ jobs:
 
       - name: Compile .pwn to .amx
         run: |
+          mkdir -p compiled
           ./compiler/source/pawncc LexusRP.pwn -o compiled/LexusRP.amx
-        working-directory: ${{ github.workspace }}
 
       - name: Upload .amx
         uses: actions/upload-artifact@v3
         with:
           name: LexusRP-amx
           path: compiled/LexusRP.amx
-          // Triggered compile
