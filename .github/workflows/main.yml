@@ -16,12 +16,19 @@ jobs:
           sudo apt install -y wget unzip lib32z1 lib32ncurses6 screen
           npm install -g localtunnel
 
+      - name: Unzip the SA-MP Server
+        run: |
+          unzip LexusRP.zip
+          ls -la
+          ls -la "LexusRP"
+          ls -la "LexusRP/file server"
+
       - name: Make server executable
-        run: chmod +x "./LexusRP/file server/samp03svr"
+        run: chmod +x "LexusRP/file server/samp03svr"
 
       - name: Run server
         run: |
-          cd "./LexusRP/file server"
+          cd "LexusRP/file server"
           screen -dmS samp ./samp03svr
 
       - name: Start LocalTunnel
