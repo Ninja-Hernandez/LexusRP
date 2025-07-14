@@ -1,4 +1,4 @@
-name: Run SA-MP Server (Fast + Debug) with LocalTunnel + DuckDNS
+name: Run SA-MP Server + Debugging (Crash Fix)
 
 on:
   workflow_dispatch:
@@ -24,32 +24,43 @@ jobs:
       run: |
         chmod +x LexusRP/LexusRP/samp03svr
 
-    - name: 🚀 اجرای سریع سرور SAMP
+    - name: 🚀 اجرای سرور SAMP در پس‌زمینه
       run: |
-        cd LexusRP/LexusRP/
+        cd LexusRP/LexusRP
         screen -dmS samp ./samp03svr
         sleep 5
-        echo "📄 بررسی سرور:"
-        ps aux | grep samp03svr || echo "⛔️ samp03svr اجرا نشده!"
-        echo "📄 لاگ آخر سرور:"
-        tail -n 40 server.log || echo "server.log پیدا نشد"
+        echo "📄 بررسی وضعیت اجرای samp03svr:"
+        ps aux | grep samp03svr || echo "❌ اجرا نشده یا سریع کرش کرده"
 
-    - name: 🌍 اجرای LocalTunnel برای پورت 7777
+    - name: 🔎 بررسی فایل‌های بحرانی
+      run: |
+        echo "🔹 بررسی فایل اجرایی:"
+        file LexusRP/LexusRP/samp03svr || echo "⛔️ samp03svr ناقص یا خراب است"
+        
+        echo "🔹 بررسی فایل server.cfg:"
+        cat LexusRP/LexusRP/server.cfg || echo "⛔️ server.cfg پیدا نشد یا خرابه"
+
+        echo "🔹 بررسی pluginها:"
+        ls -l LexusRP/LexusRP/plugins || echo "⛔️ پوشه plugins ناقصه یا اصلاً نیست"
+        
+        echo "🔹 بررسی gamemodes:"
+        ls -l LexusRP/LexusRP/gamemodes || echo "⛔️ پوشه gamemodes یا فایل AMX نیست"
+
+    - name: 📄 نمایش کامل لاگ server.log
+      run: |
+        echo "📄 لاگ کامل اجرا:"
+        cat LexusRP/LexusRP/server.log || echo "⛔️ فایل server.log ساخته نشده، یعنی سرور فوراً کرش کرده"
+
+    - name: 🌍 اجرای LocalTunnel
       run: |
         npx localtunnel --port 7777 --subdomain lexusrp > tunnel.log &
         sleep 10
-        echo "📄 لاگ LocalTunnel (برای بررسی اتصال):"
         tail -n 20 tunnel.log
 
-    - name: 🦆 آپدیت آی‌پی DuckDNS
+    - name: 🦆 آپدیت DuckDNS
       run: |
         curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
 
-    - name: 🔍 تست وضعیت سرور (برای رفع مشکل Loading)
+    - name: ✅ بررسی پورت سرور
       run: |
-        echo "🧪 بررسی وضعیت سرور در پورت 7777:"
         timeout 5 bash -c "</dev/tcp/127.0.0.1/7777" && echo "✅ پورت 7777 بازه (سرور ران شده)" || echo "⛔️ پورت 7777 بسته‌ست (سرور ران نشده)"
-        echo "🚀 اگر پورت باز بود ولی هنوز در SAMP نوشته LOADING:"
-        echo "🔹 بررسی کن gamemode و plugin درست لود شدن؟"
-        echo "🔹 سرور با localtunnel به درستی متصل شده؟"
-        echo "🔹 فایروال یا ارور دیتابیس باعث کرش نشده؟"
