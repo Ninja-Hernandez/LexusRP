@@ -1,41 +1,66 @@
-name: Start SAMP Server via LocalTunnel
+name: Start SAMP Server via LocalTunnel + Debug Tools
 
-on: workflow_dispatch: schedule: - cron: '0 */6 * * *'
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
 
-jobs: run-samp-server: runs-on: ubuntu-latest timeout-minutes: 120
+jobs:
+  run-samp-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v3
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v3
 
-  - name: Install Dependencies
-    run: |
-      sudo apt update && sudo apt install -y unzip screen wget lib32z1
+      - name: 🛠 Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y unzip screen wget curl lib32z1 nodejs npm
+          npm install -g localtunnel
 
-  - name: Download LocalTunnel & Start Tunnel
-    run: |
-      npm install -g localtunnel
-      lt --port 7777 --subdomain lexusrp > ltlog.txt &
-      sleep 5
-      echo 'LocalTunnel started.'
+      - name: 📦 Extract Server Files
+        run: |
+          unzip -o LexusRP.zip -d unpacked
+          chmod +x unpacked/LexusRP/samp03svr || echo "❌ samp03svr پیدا نشد!"
+          chmod +x unpacked/LexusRP/announce || echo "❌ announce پیدا نشد!"
+          ls -l unpacked/LexusRP/
 
-  - name: Update DuckDNS
-    run: |
-      curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
+      - name: 🚀 Run SAMP Server
+        run: |
+          cd unpacked/LexusRP
+          nohup ./samp03svr > server.log 2>&1 &
+          sleep 5
+          echo "✅ SAMP Server started"
 
-  - name: Unzip Server Files
-    run: |
-      unzip LexusRP.zip
-      cd LexusRP && chmod +x samp03svr && chmod +x announce
+      - name: 🌍 Start LocalTunnel
+        run: |
+          lt --port 7777 --subdomain lexusrp > ltlog.txt &
+          sleep 10
+          echo "=== Tunnel URL ==="
+          tail -n 5 ltlog.txt || echo "⛔️ LocalTunnel خروجی ندارد"
 
-  - name: Run Server
-    run: |
-      cd LexusRP
-      screen -dmS samp ./samp03svr
-      echo 'Server started.'
+      - name: 🦆 Update DuckDNS IP
+        run: |
+          curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
 
-  - name: Wait & Show Tunnel Info
-    run: |
-      sleep 20
-      cat ltlog.txt || echo 'Tunnel log not found.'
+      - name: 🔍 Check Port Status
+        run: |
+          echo "🧪 بررسی وضعیت سرور در پورت 7777:"
+          (echo > /dev/tcp/127.0.0.1/7777) &>/dev/null && echo "✅ پورت بازه!" || echo "⛔️ پورت 7777 بسته‌ست (سرور ران نشده)"
 
+      - name: 📄 Read server.log
+        run: |
+          if [ -f unpacked/LexusRP/server.log ]; then
+            tail -n 40 unpacked/LexusRP/server.log
+          else
+            echo "⛔️ فایل server.log ساخته نشده، یعنی سرور فوراً کرش کرده"
+          fi
+
+      - name: 🧠 بررسی ارورها
+        run: |
+          echo "📋 بررسی خطاهای رایج:"
+          grep -i "error" unpacked/LexusRP/server.log || echo "✔️ بدون ارور خاص"
+          grep -i "plugin" unpacked/LexusRP/server.log || echo "✔️ پلاگین‌ها مشکلی نداشتن"
+          grep -i "gamemode" unpacked/LexusRP/server.log || echo "✔️ گیم مود مشکلی نداشت"
