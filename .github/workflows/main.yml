@@ -1,66 +1,41 @@
-name: Run SA-MP Server + Debugging (Crash Fix)
+name: Start SAMP Server via LocalTunnel
 
-on:
-  workflow_dispatch:
+on: workflow_dispatch: schedule: - cron: '0 */6 * * *'
 
-jobs:
-  run:
-    runs-on: ubuntu-latest
+jobs: run-samp-server: runs-on: ubuntu-latest timeout-minutes: 120
 
-    steps:
-    - name: 📥 Clone repo
-      uses: actions/checkout@v3
+steps:
+  - name: Checkout
+    uses: actions/checkout@v3
 
-    - name: 🛠 نصب ابزارها
-      run: |
-        sudo apt update
-        sudo apt install -y unzip curl wget nodejs npm lib32z1 lib32ncurses6 screen
-        sudo npm install -g localtunnel
+  - name: Install Dependencies
+    run: |
+      sudo apt update && sudo apt install -y unzip screen wget lib32z1
 
-    - name: 📦 استخراج فایل ZIP
-      run: unzip -o LexusRP.zip -d LexusRP
+  - name: Download LocalTunnel & Start Tunnel
+    run: |
+      npm install -g localtunnel
+      lt --port 7777 --subdomain lexusrp > ltlog.txt &
+      sleep 5
+      echo 'LocalTunnel started.'
 
-    - name: 🔓 اجرایی کردن فایل samp03svr
-      run: |
-        chmod +x LexusRP/LexusRP/samp03svr
+  - name: Update DuckDNS
+    run: |
+      curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
 
-    - name: 🚀 اجرای سرور SAMP در پس‌زمینه
-      run: |
-        cd LexusRP/LexusRP
-        screen -dmS samp ./samp03svr
-        sleep 5
-        echo "📄 بررسی وضعیت اجرای samp03svr:"
-        ps aux | grep samp03svr || echo "❌ اجرا نشده یا سریع کرش کرده"
+  - name: Unzip Server Files
+    run: |
+      unzip LexusRP.zip
+      cd LexusRP && chmod +x samp03svr && chmod +x announce
 
-    - name: 🔎 بررسی فایل‌های بحرانی
-      run: |
-        echo "🔹 بررسی فایل اجرایی:"
-        file LexusRP/LexusRP/samp03svr || echo "⛔️ samp03svr ناقص یا خراب است"
-        
-        echo "🔹 بررسی فایل server.cfg:"
-        cat LexusRP/LexusRP/server.cfg || echo "⛔️ server.cfg پیدا نشد یا خرابه"
+  - name: Run Server
+    run: |
+      cd LexusRP
+      screen -dmS samp ./samp03svr
+      echo 'Server started.'
 
-        echo "🔹 بررسی pluginها:"
-        ls -l LexusRP/LexusRP/plugins || echo "⛔️ پوشه plugins ناقصه یا اصلاً نیست"
-        
-        echo "🔹 بررسی gamemodes:"
-        ls -l LexusRP/LexusRP/gamemodes || echo "⛔️ پوشه gamemodes یا فایل AMX نیست"
+  - name: Wait & Show Tunnel Info
+    run: |
+      sleep 20
+      cat ltlog.txt || echo 'Tunnel log not found.'
 
-    - name: 📄 نمایش کامل لاگ server.log
-      run: |
-        echo "📄 لاگ کامل اجرا:"
-        cat LexusRP/LexusRP/server.log || echo "⛔️ فایل server.log ساخته نشده، یعنی سرور فوراً کرش کرده"
-
-    - name: 🌍 اجرای LocalTunnel
-      run: |
-        npx localtunnel --port 7777 --subdomain lexusrp > tunnel.log &
-        sleep 10
-        tail -n 20 tunnel.log
-
-    - name: 🦆 آپدیت DuckDNS
-      run: |
-        curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
-
-    - name: ✅ بررسی پورت سرور
-      run: |
-        timeout 5 bash -c "</dev/tcp/127.0.0.1/7777" && echo "✅ پورت 7777 بازه (سرور ران شده)" || echo "⛔️ پورت 7777 بسته‌ست (سرور ران نشده)"
