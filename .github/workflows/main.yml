@@ -3,26 +3,26 @@ name: Run SAMP Server with LocalTunnel + DuckDNS + Debug
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # هر ۶ ساعت اجرا میشه
+    - cron: "0 */6 * * *"
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Clone repo
+    - name: 📥 کلون کردن ریپازیتوری
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب ابزارها
+    - name: 🛠 نصب ابزارهای موردنیاز
       run: |
         sudo apt update
         sudo apt install -y unzip curl wget nodejs npm
         sudo npm install -g localtunnel
 
-    - name: 📦 استخراج فایل سرور
+    - name: 📦 استخراج فایل‌های سرور
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 🌐 آپدیت آی‌پی DuckDNS
+    - name: 🌐 به‌روزرسانی IP در DuckDNS
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
@@ -34,34 +34,33 @@ jobs:
         sleep 10
         tail -n 20 tunnel.log
 
-    - name: ✅ تنظیم مجوز اجرا برای فایل‌ها
+    - name: ✅ تنظیم مجوز فایل‌های اجرایی
       run: |
-        chmod -R +x LexusRP/LexusRP/LexusRP
+        chmod -R +x LexusRP/LexusRP
 
     - name: 🚀 اجرای سرور SAMP
       run: |
-        cd LexusRP/LexusRP/LexusRP
+        cd LexusRP/LexusRP
         nohup ./samp03svr > server.log 2>&1 &
         sleep 8
-        echo "🔍 بررسی لاگ کامل سرور:"
+        echo "🔍 لاگ کامل:"
         cat server.log
 
-        echo "🔍 بررسی دقیق خطاها:"
-        grep -i "error" server.log || echo "❌ هیچ خطایی با کلمه error یافت نشد"
-        grep -i "plugin" server.log || echo "❌ بارگذاری پلاگین بررسی شد"
-        grep -i "gamemode" server.log || echo "❌ بارگذاری گیم مود بررسی شد"
+        echo "🔍 بررسی خطاها:"
+        grep -i "error" server.log || echo "❌ خطایی با کلمه 'error' یافت نشد"
+        grep -i "plugin" server.log || echo "❌ مشکلی در بارگذاری plugin دیده نشد"
+        grep -i "gamemode" server.log || echo "❌ مشکلی در gamemode دیده نشد"
 
-        echo "📁 بررسی فایل‌های gamemode و plugins:"
+        echo "📁 محتویات gamemodes و plugins:"
         ls -l gamemodes/
         ls -l plugins/
 
-        echo "📌 اگر سرور سریع بسته شد، احتمالاً یکی از این دلیله:"
-        echo "👉 فایل .amx ناقص یا خراب"
-        echo "👉 پلاگین .so ناقص یا اشتباهی (ویندوزی)"
-        echo "👉 مسیر فایل‌های server.cfg نادرست تعریف شده"
-        echo "👉 یا فایل announce اجازه اجرا نداره یا خراب شده"
+        echo "🧠 اگر کرش شد، بررسی کن:"
+        echo "👉 .amx خراب یا ناقص"
+        echo "👉 پلاگین‌های ویندوزی (.dll) روی لینوکس جواب نمی‌ده"
+        echo "👉 فایل announce ممکنه اجرایی نباشه یا خراب باشه"
 
-    - name: ✅ نتیجه نهایی
+    - name: ✅ آدرس نهایی
       run: |
         echo "✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:"
         echo "🌍 LexusRP.DuckDNS.org:7777"
