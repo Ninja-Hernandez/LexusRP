@@ -1,28 +1,28 @@
-name: Run SAMP Server with LocalTunnel + DuckDNS + Debug
+name: Run SAMP Server with LocalTunnel + DuckDNS
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"  # هر ۶ ساعت اجرا شود
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 کلون کردن ریپازیتوری
+    - name: 📥 Clone repo
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب ابزارهای موردنیاز
+    - name: 🛠 نصب ابزارهای لازم
       run: |
         sudo apt update
         sudo apt install -y unzip curl wget nodejs npm
         sudo npm install -g localtunnel
 
-    - name: 📦 استخراج فایل‌های سرور
+    - name: 📦 باز کردن فایل فشرده سرور
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 🌐 به‌روزرسانی IP در DuckDNS
+    - name: 🌐 به‌روزرسانی آی‌پی DuckDNS
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
@@ -34,33 +34,28 @@ jobs:
         sleep 10
         tail -n 20 tunnel.log
 
-    - name: ✅ تنظیم مجوز فایل‌های اجرایی
+    - name: 🧷 دسترسی اجرایی به فایل‌های سرور
       run: |
         chmod -R +x LexusRP/LexusRP
+        chmod +x LexusRP/LexusRP/samp03svr
+        chmod +x LexusRP/LexusRP/announce || echo "⚠️ فایل announce اجرایی نیست یا وجود ندارد"
 
     - name: 🚀 اجرای سرور SAMP
       run: |
         cd LexusRP/LexusRP
         nohup ./samp03svr > server.log 2>&1 &
-        sleep 8
-        echo "🔍 لاگ کامل:"
-        cat server.log
+        sleep 5
 
-        echo "🔍 بررسی خطاها:"
-        grep -i "error" server.log || echo "❌ خطایی با کلمه 'error' یافت نشد"
-        grep -i "plugin" server.log || echo "❌ مشکلی در بارگذاری plugin دیده نشد"
-        grep -i "gamemode" server.log || echo "❌ مشکلی در gamemode دیده نشد"
+        echo "📄 لاگ سرور (40 خط آخر):"
+        tail -n 40 server.log
 
-        echo "📁 محتویات gamemodes و plugins:"
-        ls -l gamemodes/
-        ls -l plugins/
+        echo "🔍 بررسی مشکلات:"
+        if grep -i "error" server.log; then echo '❌ ارور در لاگ یافت شد'; fi
+        if grep -i "plugin" server.log; then echo '🔌 بررسی Plugin: OK'; fi
+        if grep -i "gamemode" server.log; then echo '🎮 بررسی Gamemode: OK'; fi
+        if ! grep -i "started" server.log; then echo '⚠️ سرور به‌طور کامل ران نشده است'; fi
 
-        echo "🧠 اگر کرش شد، بررسی کن:"
-        echo "👉 .amx خراب یا ناقص"
-        echo "👉 پلاگین‌های ویندوزی (.dll) روی لینوکس جواب نمی‌ده"
-        echo "👉 فایل announce ممکنه اجرایی نباشه یا خراب باشه"
-
-    - name: ✅ آدرس نهایی
+    - name: ✅ نتیجه نهایی
       run: |
         echo "✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:"
         echo "🌍 LexusRP.DuckDNS.org:7777"
