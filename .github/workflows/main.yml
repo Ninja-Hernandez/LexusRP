@@ -13,7 +13,7 @@ jobs:
     - name: 📥 کلون کردن مخزن
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب ابزارها
+    - name: 🛠 نصب ابزارهای مورد نیاز
       run: |
         sudo apt update -qq
         sudo apt install -y unzip curl wget nodejs npm > /dev/null
@@ -22,53 +22,44 @@ jobs:
     - name: 📦 استخراج فایل ZIP
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 🌐 به‌روزرسانی IP DuckDNS
+    - name: 🌐 به‌روزرسانی آی‌پی DuckDNS
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
         curl -k -s -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
-        echo "DuckDNS Response:"
-        tail -n 10 ~/duckdns/duck.log
+        tail -n 10 ~/duckdns/duck.log || echo "❗ DuckDNS response not found"
 
     - name: 🚇 اجرای LocalTunnel با زیردامنه lexusrp
       run: |
         lt --port 7777 --subdomain lexusrp > tunnel.log 2>&1 &
         sleep 8
-        echo "LocalTunnel Log (آخرین 20 خط):"
+        echo "🔗 LocalTunnel (آخرین 20 خط):"
         tail -n 20 tunnel.log
 
-    - name: 🔍 بررسی فایل‌های حیاتی و مجوزها
+    - name: 🔍 تنظیم مجوز فایل‌های اجرایی و بررسی
       run: |
-        if [ -f LexusRP/LexusRP/samp03svr ]; then
-          chmod +x LexusRP/LexusRP/samp03svr
-          echo "✅ فایل samp03svr پیدا شد و پرمیشن اجرا داده شد."
-        else
-          echo "❌ خطا: فایل samp03svr پیدا نشد."
-          exit 1
-        fi
-
-        echo "📁 محتویات پوشه Plugins:"
-        ls -l LexusRP/LexusRP/plugins || echo "❌ پوشه Plugins پیدا نشد!"
-        
-        echo "📁 محتویات پوشه Gamemodes:"
-        ls -l LexusRP/LexusRP/gamemodes || echo "❌ پوشه Gamemodes پیدا نشد!"
+        cd LexusRP/LexusRP
+        chmod +x samp03svr announce || echo "⚠️ chmod برای فایل‌های اجرایی با مشکل مواجه شد"
+        echo "📁 Plugins:"
+        ls -l plugins || echo "❌ پوشه plugins پیدا نشد"
+        echo "📁 Gamemodes:"
+        ls -l gamemodes || echo "❌ پوشه gamemodes پیدا نشد"
 
     - name: 🚀 اجرای سرور SAMP
       run: |
         cd LexusRP/LexusRP
         nohup ./samp03svr > server.log 2>&1 &
         sleep 6
-
-        echo "📄 نمایش لاگ سرور (آخرین 40 خط):"
+        echo "📄 لاگ سرور (آخرین 40 خط):"
         tail -n 40 server.log
+        echo "🔍 بررسی لاگ:"
+        grep -i "error" server.log || echo "✔️ بدون ارور"
+        grep -i "plugin" server.log || echo "✔️ پلاگین‌ها بارگذاری شدن"
+        grep -i "gamemode" server.log || echo "✔️ گیم‌مود بارگذاری شد"
+        grep -i "started" server.log || echo "⚠️ هنوز کامل ران نشده؟ بررسی کن"
 
-        echo "🔍 بررسی لاگ برای مشکلات احتمالی:"
-        grep -i "error" server.log && echo "❌ خطا در لاگ سرور یافت شد!" || echo "✔️ خطا در لاگ سرور یافت نشد."
-        grep -i "plugin" server.log || echo "✔️ پلاگین‌ها بدون مشکل بارگذاری شدند."
-        grep -i "gamemode" server.log || echo "✔️ گیم‌مود بدون مشکل بارگذاری شد."
-        grep -i "started" server.log || echo "⚠️ احتمالاً سرور کامل ران نشده."
-
-    - name: ✅ نتیجه نهایی و آدرس سرور
+    - name: ✅ نتیجه نهایی
       run: |
-        echo "✅ سرور با موفقیت اجرا شده باشد، از طریق آدرس زیر وارد شوید:"
-        echo "🌍 IP ثابت و آدرس سرور: LexusRP.Duckdns.org:7777"
+        echo "✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:"
+        echo "🌍 LexusRP.DuckDNS.org:7777"
+        echo "🌐 lexusrp.loca.lt:7777"
