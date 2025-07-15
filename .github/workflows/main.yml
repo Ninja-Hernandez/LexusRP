@@ -2,57 +2,61 @@ name: Run SAMP Server with LocalTunnel + DuckDNS
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"  # هر ۶ ساعت اجرا شود
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 کلون کردن مخزن
+    - name: 📥 Clone repo
       uses: actions/checkout@v3
 
     - name: 🛠 نصب ابزارهای لازم
       run: |
         sudo apt update
-        sudo apt install unzip curl net-tools -y
-        npm install -g localtunnel
+        sudo apt install -y unzip curl wget nodejs npm
+        sudo npm install -g localtunnel
 
     - name: 📦 باز کردن فایل فشرده سرور
-      run: |
-        unzip -o "LexusRP.zip" -d .
-        chmod -R +x LexusRP/LexusRP
+      run: unzip -o LexusRP.zip -d LexusRP
 
     - name: 🌐 به‌روزرسانی آی‌پی DuckDNS
       run: |
         mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/update.sh
-        chmod +x ~/duckdns/update.sh
-        ~/duckdns/update.sh
+        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
+        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
     - name: 🚇 اجرای LocalTunnel روی پورت 7777
       run: |
         lt --port 7777 --subdomain lexusrp > tunnel.log &
         sleep 10
+        tail -n 20 tunnel.log
 
     - name: 🧷 دسترسی اجرایی به فایل‌های سرور
-      run: chmod -R +x LexusRP/LexusRP
+      run: |
+        chmod -R +x LexusRP/LexusRP
+        chmod +x LexusRP/LexusRP/samp03svr
+        chmod +x LexusRP/LexusRP/announce || echo "⚠️ فایل announce اجرایی نیست یا وجود ندارد"
 
     - name: 🚀 اجرای سرور SAMP
       run: |
         cd LexusRP/LexusRP
-        ./samp03svr > full.log &
-        sleep 10
-        echo "📄 لاگ سرور (کامل):"
-        cat full.log || echo "⚠️ فایل لاگ پیدا نشد"
-        echo "🔍 بررسی مشکلات:"
-        grep -i "error\|unknown\|plugin\|File\|not found\|Script" full.log || echo "✔️ هیچ اروری در لاگ پیدا نشد."
-        if ! pgrep -x "samp03svr" > /dev/null; then
-          echo "⚠️ سرور به‌طور کامل ران نشده است"
-        else
-          echo "✅ سرور در حال اجراست"
-        fi
+        nohup ./samp03svr > server.log 2>&1 &
+        sleep 5
 
-    - name: ✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:
+        echo "📄 لاگ سرور (40 خط آخر):"
+        tail -n 40 server.log
+
+        echo "🔍 بررسی مشکلات:"
+        if grep -i "error" server.log; then echo '❌ ارور در لاگ یافت شد'; fi
+        if grep -i "plugin" server.log; then echo '🔌 بررسی Plugin: OK'; fi
+        if grep -i "gamemode" server.log; then echo '🎮 بررسی Gamemode: OK'; fi
+        if ! grep -i "started" server.log; then echo '⚠️ سرور به‌طور کامل ران نشده است'; fi
+
+    - name: ✅ نتیجه نهایی
       run: |
+        echo "✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:"
         echo "🌍 LexusRP.DuckDNS.org:7777"
         echo "🌐 lexusrp.loca.lt:7777"
