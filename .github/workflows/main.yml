@@ -1,59 +1,80 @@
-name: Run SAMP Server via LocalTunnel
+name: Start SAMP Server with LocalTunnel + DuckDNS
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"  # اجرا هر 6 ساعت
 
 jobs:
-  run:
+  run-samp:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
-    - name: 📥 Clone repo
+    - name: 📥 دریافت فایل‌ها از مخزن
       uses: actions/checkout@v3
 
-    - name: 📦 Extract ZIP
-      run: unzip -o LexusRP.zip -d unpacked
-
-    - name: 🛠 نصب ابزارها
+    - name: 🛠 نصب ابزارهای لازم
       run: |
         sudo apt update
-        sudo apt install -y screen wget curl lib32z1 nodejs npm unzip
-        npm install -g localtunnel
+        sudo apt install -y unzip wget curl screen lib32z1 nodejs npm
+        sudo npm install -g localtunnel
 
-    - name: ✅ اجرای سرور SAMP
+    - name: 📦 باز کردن فایل سرور
+      run: |
+        unzip -o LexusRP.zip -d unpacked
+
+    - name: ✅ تنظیم سطح دسترسی فایل‌ها
       run: |
         cd unpacked/LexusRP
         chmod +x samp03svr
         chmod +x announce
-        screen -dmS samp ./samp03svr
-        sleep 3
-        echo "✅ سرور اجرا شد"
 
-    - name: 🚇 اجرای LocalTunnel روی پورت 7777
-      run: |
-        lt --port 7777 --subdomain lexusrp > tunnel.log &
-        sleep 10
-        tail -n 20 tunnel.log
-
-    - name: 🦆 به‌روزرسانی آی‌پی در DuckDNS
+    - name: 🌍 به‌روزرسانی IP در DuckDNS
       run: |
         curl -s "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
 
-    - name: 🔍 بررسی پورت سرور
+    - name: 🚇 اجرای LocalTunnel روی پورت 7777
       run: |
-        if (echo > /dev/tcp/127.0.0.1/7777) >/dev/null 2>&1; then
-          echo "✅ پورت 7777 بازه (سرور ران شده)"
-        else
-          echo "⛔️ پورت 7777 بسته‌ست (سرور ران نشده)"
-        fi
+        lt --port 7777 --subdomain lexusrp > lt.log &
+        sleep 5
+        echo "LocalTunnel started."
+
+    - name: 🚀 اجرای سرور SAMP
+      run: |
+        cd unpacked/LexusRP
+        screen -dmS samp ./samp03svr
+        sleep 10
+
+    - name: 🔍 بررسی پورت 7777
+      run: |
+        echo "🧪 بررسی وضعیت سرور در پورت 7777:"
+        (echo > /dev/tcp/127.0.0.1/7777) &>/dev/null && echo "✅ پورت بازه" || echo "⛔️ پورت 7777 بسته‌ست (سرور ران نشده)"
 
     - name: 📄 بررسی لاگ سرور
       run: |
         cd unpacked/LexusRP
-        if [ -f server.log ]; then
-          tail -n 40 server.log
+        if [ -f server_log.txt ]; then
+          echo "📄 لاگ کامل:"
+          tail -n 50 server_log.txt
         else
-          echo "⛔️ فایل server.log ساخته نشده، یعنی سرور فوراً کرش کرده"
+          echo "⛔️ server_log.txt وجود ندارد، سرور فوراً کرش کرده"
         fi
+
+    - name: 🧠 بررسی خطاهای رایج
+      run: |
+        cd unpacked/LexusRP
+        if [ -f server_log.txt ]; then
+          grep -i "error" server_log.txt || echo "✔️ بدون ارور خاص"
+          grep -i "plugin" server_log.txt || echo "✔️ پلاگین‌ها مشکلی نداشتن"
+          grep -i "gamemode" server_log.txt || echo "✔️ گیم مود مشکلی نداشت"
+        else
+          echo "❌ بررسی نشد چون server_log.txt نبود"
+        fi
+
+    - name: 📢 نتیجه نهایی
+      run: |
+        echo "✅ اگر همه چیز درست بود، وارد شو:"
+        echo "🌐 آدرس سرور در SAMP Launcher:"
+        echo "🔗 lexusrp.loca.lt:7777"
+        echo "🔗 یا دامنه: lexusrp.duckdns.org:7777"
