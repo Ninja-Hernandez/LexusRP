@@ -1,4 +1,4 @@
-name: Run SAMP Server with LocalTunnel + DuckDNS
+name: Run SAMP Server with LocalTunnel + DuckDNS + Debug
 
 on:
   workflow_dispatch:
@@ -19,10 +19,10 @@ jobs:
         sudo apt install -y unzip curl wget nodejs npm
         sudo npm install -g localtunnel
 
-    - name: 📦 باز کردن فایل ZIP
+    - name: 📦 استخراج فایل سرور
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 🌐 به‌روزرسانی آی‌پی DuckDNS
+    - name: 🌐 آپدیت آی‌پی DuckDNS
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
@@ -32,51 +32,37 @@ jobs:
       run: |
         lt --port 7777 --subdomain lexusrp > tunnel.log &
         sleep 10
-        echo "=== LocalTunnel Log (last 20 lines) ==="
         tail -n 20 tunnel.log
 
-    - name: 🔍 تنظیم دسترسی‌ها و بررسی فایل‌ها
+    - name: ✅ تنظیم مجوز اجرا برای فایل‌ها
       run: |
-        chmod -R +x LexusRP/LexusRP
-        echo "📁 بررسی پوشه Plugins:"
-        ls -l LexusRP/LexusRP/plugins || echo "پوشه Plugins یافت نشد"
-        echo "📁 بررسی پوشه Gamemodes:"
-        ls -l LexusRP/LexusRP/gamemodes || echo "پوشه Gamemodes یافت نشد"
+        chmod -R +x LexusRP/LexusRP/LexusRP
 
     - name: 🚀 اجرای سرور SAMP
       run: |
-        cd LexusRP/LexusRP
+        cd LexusRP/LexusRP/LexusRP
         nohup ./samp03svr > server.log 2>&1 &
         sleep 8
-        echo "📄 محتویات server.log (آخرین 40 خط):"
-        tail -n 40 server.log
+        echo "🔍 بررسی لاگ کامل سرور:"
+        cat server.log
 
-    - name: 🔍 بررسی لاگ برای مشکلات احتمالی
-      run: |
-        cd LexusRP/LexusRP
-        echo "🔍 شروع بررسی لاگ برای مشکلات احتمالی:"
-        if grep -i "Run time error" server.log; then
-          echo "❌ ارور زمان اجرا (Run time error) یافت شد! لطفا گیم‌مود و اسکریپت‌ها را بررسی کنید."
-        fi
-        if grep -i "could not load" server.log; then
-          echo "❌ ارور بارگذاری فایل پیدا شد. احتمالا فایل‌های گمشده یا مسیر نادرست دارید."
-        fi
-        if grep -i "failed to open" server.log; then
-          echo "❌ ارور بازکردن فایل رخ داده. ممکن است فایل یا دسترسی‌ها مشکل داشته باشند."
-        fi
-        if grep -i "function is not found" server.log; then
-          echo "❌ تابعی که فراخوانی شده پیدا نشده. احتمالا در اسکریپت‌ها مشکل دارید."
-        fi
-        if grep -i "plugin error" server.log; then
-          echo "❌ خطا در پلاگین‌ها وجود دارد. پلاگین‌ها و مسیر آن‌ها را چک کنید."
-        fi
-        if ! grep -i "error" server.log && ! grep -i "failed" server.log; then
-          echo "✔️ هیچ اروری در لاگ پیدا نشد."
-          echo "⚠️ با این حال احتمالاً سرور کامل ران نشده. بررسی‌های دیگر لازم است."
-        fi
+        echo "🔍 بررسی دقیق خطاها:"
+        grep -i "error" server.log || echo "❌ هیچ خطایی با کلمه error یافت نشد"
+        grep -i "plugin" server.log || echo "❌ بارگذاری پلاگین بررسی شد"
+        grep -i "gamemode" server.log || echo "❌ بارگذاری گیم مود بررسی شد"
+
+        echo "📁 بررسی فایل‌های gamemode و plugins:"
+        ls -l gamemodes/
+        ls -l plugins/
+
+        echo "📌 اگر سرور سریع بسته شد، احتمالاً یکی از این دلیله:"
+        echo "👉 فایل .amx ناقص یا خراب"
+        echo "👉 پلاگین .so ناقص یا اشتباهی (ویندوزی)"
+        echo "👉 مسیر فایل‌های server.cfg نادرست تعریف شده"
+        echo "👉 یا فایل announce اجازه اجرا نداره یا خراب شده"
 
     - name: ✅ نتیجه نهایی
       run: |
-        echo "✅ سرور اگر به درستی اجرا شده باشد، از طریق آدرس‌های زیر وارد شوید:"
+        echo "✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:"
         echo "🌍 LexusRP.DuckDNS.org:7777"
         echo "🌐 lexusrp.loca.lt:7777"
