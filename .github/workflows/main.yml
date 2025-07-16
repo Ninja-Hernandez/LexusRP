@@ -17,25 +17,25 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt update
-        sudo apt install -y lib32z1 lib32gcc-s1
+        sudo apt install -y lib32z1 lib32gcc-s1 unzip
 
     - name: 📦 استخراج فایل ZIP
       run: |
-        unzip -o "Iran RolePlay @PowerDevelopers.zip" -d "LexusRP"
-        ls -la "LexusRP"
+        unzip -o LexusRP.zip -d LexusRP
+        ls -la LexusRP
 
     - name: 🚀 اجرای سرور
       run: |
-        cd "LexusRP"
+        cd LexusRP
         chmod +x samp03svr
-        chmod +x announce || echo "⚠️ فایل announce وجود نداره"
-        chmod +x startup.sh || echo "⚠️ فایل startup.sh وجود نداره"
+        chmod +x announce || echo "⚠️ فایل announce وجود ندارد"
+        chmod +x startup.sh || echo "⚠️ فایل startup.sh وجود ندارد"
         ./samp03svr > server.log 2>&1 &
         sleep 10
         echo "📄 آخرین خطوط لاگ:"
         tail -n 20 server.log || echo "لاگی پیدا نشد"
 
-    - name: ✅ نتیجه
+    - name: ✅ نتیجه نهایی
       run: |
-        echo "✅ سرور اگر درست ران شده باشه، باید الان بالا باشه."
-        echo "🌐 آی‌پی: LexusRP.DuckDNS.Org:7777"
+        echo "✅ اگر خطایی ندیدی، سرور ران شده"
+        echo "🌐 آدرس اتصال: LexusRP.DuckDNS.Org:7777"
