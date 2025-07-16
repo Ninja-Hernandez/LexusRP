@@ -3,6 +3,7 @@ name: Run SA-MP Server - LexusRP
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   start-server:
@@ -13,14 +14,28 @@ jobs:
       uses: actions/checkout@v3
 
     - name: ⚙️ نصب کتابخانه‌های ۳۲ بیتی
-      run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt update
+        sudo apt install -y lib32z1 lib32gcc-s1
+
+    - name: 📦 استخراج فایل ZIP
+      run: |
+        unzip -o "Iran RolePlay @PowerDevelopers.zip" -d "LexusRP"
+        ls -la "LexusRP"
 
     - name: 🚀 اجرای سرور
       run: |
-        cd "Iran RolePlay @PowerDevelopers"
+        cd "LexusRP"
         chmod +x samp03svr
-        chmod +x announce
-        chmod +x startup.sh
-        ./startup.sh &
-        sleep 15
-        echo "✅ سرور اجرا شد - بررسی آی‌پی LexusRP.Duck.DNS.Org:7777"
+        chmod +x announce || echo "⚠️ فایل announce وجود نداره"
+        chmod +x startup.sh || echo "⚠️ فایل startup.sh وجود نداره"
+        ./samp03svr > server.log 2>&1 &
+        sleep 10
+        echo "📄 آخرین خطوط لاگ:"
+        tail -n 20 server.log || echo "لاگی پیدا نشد"
+
+    - name: ✅ نتیجه
+      run: |
+        echo "✅ سرور اگر درست ران شده باشه، باید الان بالا باشه."
+        echo "🌐 آی‌پی: LexusRP.DuckDNS.Org:7777"
