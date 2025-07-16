@@ -1,21 +1,26 @@
-name: Run SA-MP Server on GitHub
+name: Run SA-MP Server - LexusRP
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  run-server:
+  start-server:
     runs-on: ubuntu-latest
 
     steps:
-    - name: ⬇️ کلون پروژه
+    - name: 📥 کلون کردن فایل‌ها
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب پیش‌نیازها
+    - name: ⚙️ نصب کتابخانه‌های ۳۲ بیتی
       run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
 
     - name: 🚀 اجرای سرور
       run: |
+        cd "Iran RolePlay @PowerDevelopers"
+        chmod +x samp03svr
+        chmod +x announce
         chmod +x startup.sh
-        ./startup.sh
+        ./startup.sh &
+        sleep 15
+        echo "✅ سرور اجرا شد - بررسی آی‌پی LexusRP.Duck.DNS.Org:7777"
