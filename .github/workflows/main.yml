@@ -1,4 +1,4 @@
-name: Run SA-MP Server
+name: Run SA-MP Server on GitHub
 
 on:
   push:
@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: ⬇️ دریافت سورس پروژه
+    - name: ⬇️ کلون پروژه
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب پیش‌نیازهای سرور
+    - name: 🛠 نصب پیش‌نیازها
       run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
 
     - name: 🚀 اجرای سرور
