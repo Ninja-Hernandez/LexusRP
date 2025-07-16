@@ -15,8 +15,7 @@ jobs:
     - name: 🛠 نصب پیش‌نیازهای لینوکس
       run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
 
-    - name: 🚀 اجرای سرور SA-MP از داخل پوشه LexusRP
+    - name: 🚀 اجرای سرور SA-MP
       run: |
-        cd LexusRP
         chmod +x startup.sh
         ./startup.sh
