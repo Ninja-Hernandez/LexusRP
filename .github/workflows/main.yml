@@ -12,10 +12,10 @@ jobs:
     - name: ⬇️ دریافت سورس پروژه
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب پیش‌نیازهای 32 بیتی
+    - name: 🛠 نصب پیش‌نیازهای سرور
       run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
 
-    - name: 🚀 اجرای سرور SA-MP
+    - name: 🚀 اجرای سرور
       run: |
         chmod +x startup.sh
         ./startup.sh
