@@ -1,4 +1,4 @@
-name: Run SA-MP Server from Folder
+name: Run SA-MP Server
 
 on:
   push:
@@ -12,11 +12,10 @@ jobs:
     - name: ⬇️ دریافت سورس پروژه
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب پیش‌نیازهای سرور
+    - name: 🛠 نصب پیش‌نیازهای 32 بیتی
       run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
 
-    - name: 🚀 اجرای سرور از پوشه LexusRP_Final_GitHub_Ready
+    - name: 🚀 اجرای سرور SA-MP
       run: |
-        cd LexusRP_Final_GitHub_Ready
         chmod +x startup.sh
         ./startup.sh
