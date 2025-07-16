@@ -10,32 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 کلون کردن فایل‌ها
+    - name: 📥 کلون کردن فایل‌ها از ریپو
       uses: actions/checkout@v3
 
-    - name: ⚙️ نصب کتابخانه‌های لازم
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt update
-        sudo apt install -y lib32z1 lib32gcc-s1 unzip
+    - name: 📦 استخراج فایل LexusRP.zip
+      run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 📦 اکسترکت فایل ZIP
+    - name: ⚙️ نصب کتابخانه‌های مورد نیاز ۳۲بیتی
       run: |
-        unzip -o LexusRP.zip -d LexusRP
-        ls -la LexusRP/LexusRP
+        sudo apt update
+        sudo apt install -y lib32z1 lib32gcc-s1
+
+    - name: 🧷 دسترسی اجرایی به فایل‌های سرور
+      run: |
+        cd LexusRP/LexusRP
+        chmod +x samp03svr
+        chmod +x announce
+        chmod +x startup.sh
 
     - name: 🚀 اجرای سرور
       run: |
         cd LexusRP/LexusRP
-        chmod +x samp03svr
-        chmod +x announce || echo "⚠️ announce وجود ندارد"
-        chmod +x startup.sh || echo "⚠️ startup.sh وجود ندارد"
-        ./samp03svr > server.log 2>&1 &
+        ./startup.sh &
         sleep 10
-        echo "📄 خروجی لاگ:"
-        tail -n 40 server.log || echo "📁 لاگی وجود ندارد"
-
-    - name: ✅ پایان
-      run: |
-        echo "✅ سرور اجرا شد، اگر خطایی نیست می‌تونی با آدرس زیر وارد شی:"
-        echo "🌍 LexusRP.DuckDNS.org:7777"
+        echo "✅ سرور اجرا شد — بررسی IP: LexusRP.DuckDNS.org:7777"
