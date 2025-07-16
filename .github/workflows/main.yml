@@ -19,7 +19,7 @@ jobs:
     - name: 📦 استخراج فایل زیپ
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: 🔍 پیدا کردن مسیر samp03svr و اجرای آن
+    - name: 🚀 اجرای سرور
       run: |
         echo "🔍 جستجوی samp03svr..."
         SAMP_PATH=$(find LexusRP -type f -name samp03svr | head -n 1)
@@ -34,7 +34,15 @@ jobs:
         SAMP_DIR=$(dirname "$SAMP_PATH")
         cd "$SAMP_DIR"
 
+        echo "🔑 دادن دسترسی به فایل‌های اجرایی..."
         chmod +x samp03svr
+        chmod +x announce || echo "⚠️ announce پیدا نشد"
+        chmod +x *.so 2>/dev/null || true
+        chmod +x *.amx 2>/dev/null || true
+        chmod +x *.dll 2>/dev/null || true
+        chmod +x *.sh 2>/dev/null || true
+
+        echo "🚀 اجرای سرور..."
         ./samp03svr > server.log 2>&1 &
         sleep 10
 
