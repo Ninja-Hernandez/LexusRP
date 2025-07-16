@@ -16,21 +16,38 @@ jobs:
     - name: 📦 استخراج فایل LexusRP.zip
       run: unzip -o LexusRP.zip -d LexusRP
 
-    - name: ⚙️ نصب کتابخانه‌های مورد نیاز ۳۲بیتی
+    - name: ⚙️ نصب کتابخانه‌های ۳۲ بیتی موردنیاز
       run: |
         sudo apt update
         sudo apt install -y lib32z1 lib32gcc-s1
 
-    - name: 🧷 دسترسی اجرایی به فایل‌های سرور
+    - name: 🧷 دادن دسترسی اجرایی به فایل‌های سرور
       run: |
         cd LexusRP/LexusRP
-        chmod +x samp03svr
-        chmod +x announce
-        chmod +x startup.sh
+        chmod +x samp03svr || echo "❌ samp03svr پیدا نشد"
+        chmod +x announce || echo "⚠️ announce موجود نیست"
+        chmod +x startup.sh || echo "⚠️ startup.sh موجود نیست"
 
-    - name: 🚀 اجرای سرور
+    - name: 🚀 اجرای سرور SAMP
       run: |
         cd LexusRP/LexusRP
-        ./startup.sh &
+        if [ -f startup.sh ]; then
+          ./startup.sh &
+        elif [ -f samp03svr ]; then
+          ./samp03svr &
+        else
+          echo "❌ هیچ فایل اجرایی پیدا نشد"
+          exit 1
+        fi
         sleep 10
-        echo "✅ سرور اجرا شد — بررسی IP: LexusRP.DuckDNS.org:7777"
+        echo "✅ سرور اجرا شد - آدرس: LexusRP.DuckDNS.org:7777"
+
+    - name: 📄 لاگ بررسی اولیه
+      run: |
+        cd LexusRP/LexusRP
+        if [ -f server.log ]; then
+          echo "📜 لاگ سرور:"
+          tail -n 30 server.log
+        else
+          echo "⚠️ فایل لاگ پیدا نشد"
+        fi
