@@ -14,37 +14,29 @@ jobs:
     - name: ⚙️ نصب کتابخانه‌های موردنیاز
       run: |
         sudo apt update
-        sudo apt install -y lib32z1 lib32gcc-s1 unzip curl wget
+        sudo apt install -y lib32z1 lib32gcc-s1 unzip
 
-    - name: 📦 استخراج فایل زیپ سرور
+    - name: 📦 استخراج فایل زیپ
+      run: unzip -o LexusRP.zip -d LexusRP
+
+    - name: 🔍 پیدا کردن مسیر samp03svr و اجرای آن
       run: |
-        unzip -o LexusRP.zip -d LexusRP
+        echo "🔍 جستجوی samp03svr..."
+        SAMP_PATH=$(find LexusRP -type f -name samp03svr | head -n 1)
 
-    - name: 🔍 بررسی وجود samp03svr و اجرای آن
-      run: |
-        cd LexusRP/LexusRP
-        echo "📁 مسیر فعلی:"
-        pwd
-
-        echo "📂 لیست فایل‌ها:"
-        ls -la
-
-        if [ -f "samp03svr" ]; then
-          echo "✅ samp03svr پیدا شد"
-          chmod +x samp03svr
-          ./samp03svr > server.log 2>&1 &
-          sleep 10
-
-          echo "📄 ۲۰ خط آخر لاگ:"
-          tail -n 20 server.log
-
-          if grep -i "started" server.log; then
-            echo "✅ سرور با موفقیت اجرا شد!"
-          else
-            echo "⚠️ سرور اجرا نشد، لطفاً لاگ را بررسی کن"
-          fi
-        else
+        if [ -z "$SAMP_PATH" ]; then
           echo "❌ فایل samp03svr پیدا نشد"
-          ls -la
+          find LexusRP -type d
           exit 1
         fi
+
+        echo "✅ فایل samp03svr پیدا شد در: $SAMP_PATH"
+        SAMP_DIR=$(dirname "$SAMP_PATH")
+        cd "$SAMP_DIR"
+
+        chmod +x samp03svr
+        ./samp03svr > server.log 2>&1 &
+        sleep 10
+
+        echo "📄 ۲۰ خط آخر لاگ:"
+        tail -n 20 server.log || echo "⚠️ لاگی وجود ندارد"
