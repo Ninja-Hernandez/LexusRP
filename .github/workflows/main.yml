@@ -1,67 +1,21 @@
-name: Run SAMP Server
+name: Run SA-MP Server on Push
 
 on:
-  workflow_dispatch:
   push:
+    branches: [ main ]
 
 jobs:
   run-server:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Clone Repository
+    - name: ⬇️ دریافت سورس پروژه
       uses: actions/checkout@v3
 
-    - name: 🛠 Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y unzip curl wget nodejs npm
-        sudo npm install -g localtunnel
+    - name: 🛠 نصب پیش‌نیازهای لینوکس
+      run: sudo apt update && sudo apt install -y lib32z1 lib32gcc-s1
 
-    - name: 📦 Extract ZIP and Show Contents
+    - name: 📄 دادن دسترسی اجرا و اجرای سرور
       run: |
-        echo "📦 Extracting LexusRP_Final.zip ..."
-        unzip -o LexusRP_Final.zip -d LexusRP
-        echo "📁 Contents of LexusRP:"
-        ls -la LexusRP || true
-        find LexusRP -type f
-
-    - name: 🌐 Update DuckDNS IP
-      run: |
-        mkdir -p ~/duckdns
-        echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
-        curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
-
-    - name: 🚇 Start LocalTunnel
-      run: |
-        lt --port 7777 --subdomain lexusrp > tunnel.log &
-        sleep 10
-        tail -n 20 tunnel.log || echo "⚠️ LocalTunnel may not have output yet"
-
-    - name: 🔧 Make Files Executable
-      run: |
-        echo "🔍 Looking for samp03svr..."
-        find LexusRP -name samp03svr -exec chmod +x {} \; || echo "⚠️ samp03svr not found"
-        find LexusRP -name announce -exec chmod +x {} \; || echo "⚠️ announce not found"
-
-    - name: 🚀 Run SAMP Server
-      run: |
-        echo "🔍 Searching for samp03svr to run..."
-        SAMP_PATH=$(find LexusRP -name samp03svr | head -n 1)
-        if [ -z "$SAMP_PATH" ]; then
-          echo "❌ samp03svr not found. Cannot start server."
-          exit 1
-        fi
-        cd $(dirname "$SAMP_PATH")
-        echo "✅ Running SAMP Server in: $(pwd)"
-        nohup ./samp03svr > server.log 2>&1 &
-        sleep 5
-        echo "📄 Last 40 lines of server.log:"
-        tail -n 40 server.log || echo "⚠️ Log not found"
-
-    - name: ✅ Done
-      run: |
-        echo "✅ Server startup script completed."
-        echo "📡 Connect using:"
-        echo "🔗 LexusRP.DuckDNS.org:7777"
-        echo "🔗 lexusrp.loca.lt:7777"
+        chmod +x startup.sh
+        ./startup.sh
