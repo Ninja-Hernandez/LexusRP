@@ -35,18 +35,18 @@ jobs:
 
     - name: 🔧 Make Executables
       run: |
-        chmod -R +x LexusRP/LexusRP
-        chmod +x LexusRP/LexusRP/samp03svr
-        chmod +x LexusRP/LexusRP/announce || echo "⚠️ No announce file"
+        chmod -R +x LexusRP
+        chmod +x LexusRP/samp03svr
+        chmod +x LexusRP/announce || echo "⚠️ No announce file"
 
     - name: 🚀 Run Server
       run: |
-        cd LexusRP/LexusRP
+        cd LexusRP
         nohup ./samp03svr > server.log 2>&1 &
         sleep 5
         tail -n 40 server.log || echo "⚠️ Log not found"
 
     - name: ✅ Done
       run: |
-        echo "Server started (if all logs are OK)"
-        echo "Access via: LexusRP.DuckDNS.org:7777 or lexusrp.loca.lt:7777"
+        echo "✅ Server started (if all logs are OK)"
+        echo "🌐 Access via: LexusRP.DuckDNS.org:7777 or lexusrp.loca.lt:7777"
