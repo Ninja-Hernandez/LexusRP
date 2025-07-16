@@ -1,62 +1,52 @@
-name: Run SAMP Server with LocalTunnel + DuckDNS
+name: Run SAMP Server
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 */6 * * *"  # هر ۶ ساعت اجرا شود
+  push:
 
 jobs:
-  build:
+  run-server:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Clone repo
+    - name: 📥 Clone Repository
       uses: actions/checkout@v3
 
-    - name: 🛠 نصب ابزارهای لازم
+    - name: 🛠 Install Dependencies
       run: |
         sudo apt update
         sudo apt install -y unzip curl wget nodejs npm
         sudo npm install -g localtunnel
 
-    - name: 📦 باز کردن فایل فشرده سرور
-      run: unzip -o LexusRP.zip -d LexusRP
+    - name: 📦 Extract Server Files
+      run: unzip -o LexusRP_Final.zip -d LexusRP
 
-    - name: 🌐 به‌روزرسانی آی‌پی DuckDNS
+    - name: 🌐 Update DuckDNS IP
       run: |
         mkdir -p ~/duckdns
         echo "url=https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip=" > ~/duckdns/duck.conf
         curl -k -o ~/duckdns/duck.log -K ~/duckdns/duck.conf
 
-    - name: 🚇 اجرای LocalTunnel روی پورت 7777
+    - name: 🚇 Start LocalTunnel
       run: |
         lt --port 7777 --subdomain lexusrp > tunnel.log &
         sleep 10
         tail -n 20 tunnel.log
 
-    - name: 🧷 دسترسی اجرایی به فایل‌های سرور
+    - name: 🔧 Make Executables
       run: |
         chmod -R +x LexusRP/LexusRP
         chmod +x LexusRP/LexusRP/samp03svr
-        chmod +x LexusRP/LexusRP/announce || echo "⚠️ فایل announce اجرایی نیست یا وجود ندارد"
+        chmod +x LexusRP/LexusRP/announce || echo "⚠️ No announce file"
 
-    - name: 🚀 اجرای سرور SAMP
+    - name: 🚀 Run Server
       run: |
         cd LexusRP/LexusRP
         nohup ./samp03svr > server.log 2>&1 &
         sleep 5
+        tail -n 40 server.log || echo "⚠️ Log not found"
 
-        echo "📄 لاگ سرور (40 خط آخر):"
-        tail -n 40 server.log
-
-        echo "🔍 بررسی مشکلات:"
-        if grep -i "error" server.log; then echo '❌ ارور در لاگ یافت شد'; fi
-        if grep -i "plugin" server.log; then echo '🔌 بررسی Plugin: OK'; fi
-        if grep -i "gamemode" server.log; then echo '🎮 بررسی Gamemode: OK'; fi
-        if ! grep -i "started" server.log; then echo '⚠️ سرور به‌طور کامل ران نشده است'; fi
-
-    - name: ✅ نتیجه نهایی
+    - name: ✅ Done
       run: |
-        echo "✅ اگر همه چیز درست بود، از آدرس‌های زیر وارد شو:"
-        echo "🌍 LexusRP.DuckDNS.org:7777"
-        echo "🌐 lexusrp.loca.lt:7777"
+        echo "Server started (if all logs are OK)"
+        echo "Access via: LexusRP.DuckDNS.org:7777 or lexusrp.loca.lt:7777"
