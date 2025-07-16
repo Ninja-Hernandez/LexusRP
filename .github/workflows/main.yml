@@ -18,8 +18,13 @@ jobs:
         sudo apt install -y unzip curl wget nodejs npm
         sudo npm install -g localtunnel
 
-    - name: 📦 Extract Server Files
-      run: unzip -o LexusRP_Final.zip -d LexusRP
+    - name: 📦 Extract ZIP and Show Contents
+      run: |
+        echo "📦 Extracting LexusRP_Final.zip ..."
+        unzip -o LexusRP_Final.zip -d LexusRP
+        echo "📁 Contents of LexusRP:"
+        ls -la LexusRP || true
+        find LexusRP -type f
 
     - name: 🌐 Update DuckDNS IP
       run: |
@@ -31,22 +36,32 @@ jobs:
       run: |
         lt --port 7777 --subdomain lexusrp > tunnel.log &
         sleep 10
-        tail -n 20 tunnel.log
+        tail -n 20 tunnel.log || echo "⚠️ LocalTunnel may not have output yet"
 
-    - name: 🔧 Make Executables
+    - name: 🔧 Make Files Executable
       run: |
-        chmod -R +x LexusRP
-        chmod +x LexusRP/samp03svr
-        chmod +x LexusRP/announce || echo "⚠️ No announce file"
+        echo "🔍 Looking for samp03svr..."
+        find LexusRP -name samp03svr -exec chmod +x {} \; || echo "⚠️ samp03svr not found"
+        find LexusRP -name announce -exec chmod +x {} \; || echo "⚠️ announce not found"
 
-    - name: 🚀 Run Server
+    - name: 🚀 Run SAMP Server
       run: |
-        cd LexusRP
+        echo "🔍 Searching for samp03svr to run..."
+        SAMP_PATH=$(find LexusRP -name samp03svr | head -n 1)
+        if [ -z "$SAMP_PATH" ]; then
+          echo "❌ samp03svr not found. Cannot start server."
+          exit 1
+        fi
+        cd $(dirname "$SAMP_PATH")
+        echo "✅ Running SAMP Server in: $(pwd)"
         nohup ./samp03svr > server.log 2>&1 &
         sleep 5
+        echo "📄 Last 40 lines of server.log:"
         tail -n 40 server.log || echo "⚠️ Log not found"
 
     - name: ✅ Done
       run: |
-        echo "✅ Server started (if all logs are OK)"
-        echo "🌐 Access via: LexusRP.DuckDNS.org:7777 or lexusrp.loca.lt:7777"
+        echo "✅ Server startup script completed."
+        echo "📡 Connect using:"
+        echo "🔗 LexusRP.DuckDNS.org:7777"
+        echo "🔗 lexusrp.loca.lt:7777"
