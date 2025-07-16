@@ -13,29 +13,29 @@ jobs:
     - name: 📥 کلون کردن فایل‌ها
       uses: actions/checkout@v3
 
-    - name: ⚙️ نصب کتابخانه‌های ۳۲ بیتی
+    - name: ⚙️ نصب ابزارهای لازم
       run: |
         sudo dpkg --add-architecture i386
         sudo apt update
         sudo apt install -y lib32z1 lib32gcc-s1 unzip
 
-    - name: 📦 استخراج فایل ZIP
+    - name: 📦 اکسترکت فایل ZIP
       run: |
         unzip -o LexusRP.zip -d LexusRP
-        ls -la LexusRP
+        ls -la LexusRP/LexusRP
 
     - name: 🚀 اجرای سرور
       run: |
-        cd LexusRP
+        cd LexusRP/LexusRP
         chmod +x samp03svr
         chmod +x announce || echo "⚠️ فایل announce وجود ندارد"
         chmod +x startup.sh || echo "⚠️ فایل startup.sh وجود ندارد"
         ./samp03svr > server.log 2>&1 &
         sleep 10
         echo "📄 آخرین خطوط لاگ:"
-        tail -n 20 server.log || echo "لاگی پیدا نشد"
+        tail -n 20 server.log || echo "📁 لاگی وجود ندارد"
 
-    - name: ✅ نتیجه نهایی
+    - name: ✅ پایان
       run: |
-        echo "✅ اگر خطایی ندیدی، سرور ران شده"
-        echo "🌐 آدرس اتصال: LexusRP.DuckDNS.Org:7777"
+        echo "✅ اجرای سرور تمام شد."
+        echo "🌐 IP اتصال: LexusRP.DuckDNS.org:7777"
