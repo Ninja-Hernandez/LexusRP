@@ -1,8 +1,6 @@
 name: Run SA-MP Server - LexusRP
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -10,44 +8,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 کلون کردن فایل‌ها از ریپو
+    - name: 📥 کلون کردن فایل‌ها
       uses: actions/checkout@v3
 
-    - name: 📦 استخراج فایل LexusRP.zip
-      run: unzip -o LexusRP.zip -d LexusRP
-
-    - name: ⚙️ نصب کتابخانه‌های ۳۲ بیتی موردنیاز
+    - name: ⚙️ نصب کتابخانه‌های موردنیاز
       run: |
         sudo apt update
-        sudo apt install -y lib32z1 lib32gcc-s1
+        sudo apt install -y lib32z1 lib32gcc-s1 unzip curl wget
 
-    - name: 🧷 دادن دسترسی اجرایی به فایل‌های سرور
+    - name: 📦 استخراج فایل زیپ سرور
+      run: |
+        unzip -o LexusRP.zip -d LexusRP
+
+    - name: 🔍 بررسی وجود samp03svr و اجرای آن
       run: |
         cd LexusRP/LexusRP
-        chmod +x samp03svr || echo "❌ samp03svr پیدا نشد"
-        chmod +x announce || echo "⚠️ announce موجود نیست"
-        chmod +x startup.sh || echo "⚠️ startup.sh موجود نیست"
+        echo "📁 مسیر فعلی:"
+        pwd
 
-    - name: 🚀 اجرای سرور SAMP
-      run: |
-        cd LexusRP/LexusRP
-        if [ -f startup.sh ]; then
-          ./startup.sh &
-        elif [ -f samp03svr ]; then
-          ./samp03svr &
+        echo "📂 لیست فایل‌ها:"
+        ls -la
+
+        if [ -f "samp03svr" ]; then
+          echo "✅ samp03svr پیدا شد"
+          chmod +x samp03svr
+          ./samp03svr > server.log 2>&1 &
+          sleep 10
+
+          echo "📄 ۲۰ خط آخر لاگ:"
+          tail -n 20 server.log
+
+          if grep -i "started" server.log; then
+            echo "✅ سرور با موفقیت اجرا شد!"
+          else
+            echo "⚠️ سرور اجرا نشد، لطفاً لاگ را بررسی کن"
+          fi
         else
-          echo "❌ هیچ فایل اجرایی پیدا نشد"
+          echo "❌ فایل samp03svr پیدا نشد"
+          ls -la
           exit 1
-        fi
-        sleep 10
-        echo "✅ سرور اجرا شد - آدرس: LexusRP.DuckDNS.org:7777"
-
-    - name: 📄 لاگ بررسی اولیه
-      run: |
-        cd LexusRP/LexusRP
-        if [ -f server.log ]; then
-          echo "📜 لاگ سرور:"
-          tail -n 30 server.log
-        else
-          echo "⚠️ فایل لاگ پیدا نشد"
         fi
