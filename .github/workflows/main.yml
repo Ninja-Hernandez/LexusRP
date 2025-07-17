@@ -23,12 +23,14 @@ jobs:
         run: |
           find ./unzipped -type f -name samp03svr
 
-      - name: اجرای دسترسی اجرایی روی samp03svr
+      - name: دادن دسترسی اجرایی به فایل‌های اجرایی سرور
         run: |
-          FILE_PATH=$(find ./unzipped -type f -name samp03svr | head -n 1)
-          echo "مسیر فایل samp03svr: $FILE_PATH"
-          chmod +x "$FILE_PATH"
-
+          FILE_DIR=$(dirname $(find ./unzipped -type f -name samp03svr | head -n 1))
+          echo "دایرکتوری اجرایی: $FILE_DIR"
+          chmod +x "$FILE_DIR/samp03svr"
+          if [ -f "$FILE_DIR/announce" ]; then chmod +x "$FILE_DIR/announce"; fi
+          # اگر فایل‌های اجرایی دیگه‌ای داری اینجا اضافه کن
+          
       - name: نصب Node.js برای LocalTunnel
         uses: actions/setup-node@v3
         with:
