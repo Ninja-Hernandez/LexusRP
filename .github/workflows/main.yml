@@ -1,45 +1,44 @@
-name: Run SA-MP Server with LocalTunnel
+name: Run SA-MP Server via GitHub Actions
 
 on:
   workflow_dispatch:
 
 jobs:
-  run-server:
+  run-samp-server:
     runs-on: ubuntu-latest
 
     steps:
-    - name: نصب مخزن
-      uses: actions/checkout@v3
+      - name: دانلود فایل‌های سرور
+        uses: actions/checkout@v3
 
-    - name: اکسترکت فایل سرور
-      run: |
-        unzip -o "LexusRP.zip" -d server
+      - name: نصب Node.js برای LocalTunnel
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
-    - name: پیدا کردن فایل اجرایی samp03svr
-      run: |
-        chmod +x ./server/**/samp03svr || chmod +x ./server/**/**/samp03svr
-        find ./server -name samp03svr
+      - name: نصب LocalTunnel
+        run: npm install -g localtunnel
 
-    - name: نصب NodeJS برای LocalTunnel
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: اکسترکت فایل ZIP سرور
+        run: unzip -o "./LexusRP.zip" -d "./unzipped"
 
-    - name: نصب و اجرای LocalTunnel
-      run: |
-        npm install -g localtunnel
-        lt --port 7777 --subdomain lexusrp > tunnel.log &
-        sleep 5
-        echo "آدرس تونل ساخته شد:"
-        cat tunnel.log
+      - name: اجرای دسترسی اجرایی روی samp03svr
+        run: chmod +x ./unzipped/LexusRP/file\ server/samp03svr
 
-    - name: بروزرسانی آی‌پی در DuckDNS
-      run: |
-        curl -k "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
+      - name: اجرای سرور SA-MP
+        run: |
+          cd ./unzipped/LexusRP/file\ server
+          ./samp03svr &
 
-    - name: اجرای سرور SA-MP
-      run: |
-        cd server/**/** || cd server/** || cd server
-        ./samp03svr &
-        sleep 10
-        echo "سرور اجرا شد"
+      - name: اجرای LocalTunnel برای پورت 7777
+        run: |
+          lt --port 7777 --subdomain lexusrp > lt.log &
+          sleep 5
+          cat lt.log
+
+      - name: بروزرسانی آی‌پی در DuckDNS
+        run: |
+          curl "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
+
+      - name: پایان عملیات
+        run: echo "سرور SA-MP با موفقیت ران شد ✅"
