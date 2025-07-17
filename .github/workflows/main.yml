@@ -1,44 +1,58 @@
-name: Run SA-MP Server via GitHub Actions
+name: Run SA-MP Server with LocalTunnel
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  run-samp-server:
+  run-server:
     runs-on: ubuntu-latest
 
     steps:
-      - name: دانلود فایل‌های سرور
+      - name: دانلود مخزن
         uses: actions/checkout@v3
+
+      - name: اکسترکت فایل سرور
+        run: |
+          mkdir -p unzipped
+          unzip -q LexusRP.zip -d unzipped
+
+      - name: پیدا کردن مسیر فایل samp03svr
+        run: |
+          find ./unzipped -type f -name samp03svr
+
+      - name: اجرای دسترسی اجرایی روی samp03svr
+        run: |
+          FILE_PATH=$(find ./unzipped -type f -name samp03svr | head -n 1)
+          echo "مسیر فایل samp03svr: $FILE_PATH"
+          chmod +x "$FILE_PATH"
 
       - name: نصب Node.js برای LocalTunnel
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
 
       - name: نصب LocalTunnel
         run: npm install -g localtunnel
 
-      - name: اکسترکت فایل ZIP سرور
-        run: unzip -o "./LexusRP.zip" -d "./unzipped"
-
-      - name: اجرای دسترسی اجرایی روی samp03svr
-        run: chmod +x ./unzipped/LexusRP/file\ server/samp03svr
-
-      - name: اجرای سرور SA-MP
+      - name: اجرای LocalTunnel برای پورت 7777 و گرفتن آدرس تونل
+        id: localtunnel
         run: |
-          cd ./unzipped/LexusRP/file\ server
-          ./samp03svr &
-
-      - name: اجرای LocalTunnel برای پورت 7777
-        run: |
-          lt --port 7777 --subdomain lexusrp > lt.log &
-          sleep 5
-          cat lt.log
+          lt --port 7777 --subdomain lexusrp &
+          sleep 10
+          echo "localtunnel url: https://lexusrp.loca.lt"
 
       - name: بروزرسانی آی‌پی در DuckDNS
         run: |
-          curl "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
+          curl -k "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
 
-      - name: پایان عملیات
-        run: echo "سرور SA-MP با موفقیت ران شد ✅"
+      - name: اجرای سرور SA-MP
+        run: |
+          FILE_PATH=$(find ./unzipped -type f -name samp03svr | head -n 1)
+          DIR_PATH=$(dirname "$FILE_PATH")
+          echo "در حال اجرای سرور در: $DIR_PATH"
+          cd "$DIR_PATH"
+          ./samp03svr &
+          sleep 15
