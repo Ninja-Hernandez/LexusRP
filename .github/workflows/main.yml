@@ -1,50 +1,38 @@
-name: Run SA-MP Server - LexusRP
+name: Run SA-MP Server
 
 on:
   workflow_dispatch:
 
 jobs:
-  start-server:
+  run-server:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 کلون کردن فایل‌ها
-      uses: actions/checkout@v3
+    - name: نصب پکیج‌های ضروری
+      run: sudo apt update && sudo apt install unzip screen wget -y
 
-    - name: ⚙️ نصب کتابخانه‌های موردنیاز
+    - name: دانلود و اکسترکت فایل سرور
       run: |
-        sudo apt update
-        sudo apt install -y lib32z1 lib32gcc-s1 unzip
+        wget https://github.com/Ninja-Hernandez/LexusRP/raw/main/LexusRP.zip -O server.zip
+        unzip server.zip -d server
 
-    - name: 📦 استخراج فایل زیپ
-      run: unzip -o LexusRP.zip -d LexusRP
-
-    - name: 🚀 اجرای سرور
+    - name: اجرای سرور
       run: |
-        echo "🔍 جستجوی samp03svr..."
-        SAMP_PATH=$(find LexusRP -type f -name samp03svr | head -n 1)
+        chmod +x ./server/samp03svr
+        screen -dmS samp ./server/samp03svr
 
-        if [ -z "$SAMP_PATH" ]; then
-          echo "❌ فایل samp03svr پیدا نشد"
-          find LexusRP -type d
-          exit 1
-        fi
+    - name: نصب NodeJS برای LocalTunnel
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
 
-        echo "✅ فایل samp03svr پیدا شد در: $SAMP_PATH"
-        SAMP_DIR=$(dirname "$SAMP_PATH")
-        cd "$SAMP_DIR"
-
-        echo "🔑 دادن دسترسی به فایل‌های اجرایی..."
-        chmod +x samp03svr
-        chmod +x announce || echo "⚠️ announce پیدا نشد"
-        chmod +x *.so 2>/dev/null || true
-        chmod +x *.amx 2>/dev/null || true
-        chmod +x *.dll 2>/dev/null || true
-        chmod +x *.sh 2>/dev/null || true
-
-        echo "🚀 اجرای سرور..."
-        ./samp03svr > server.log 2>&1 &
+    - name: نصب و اجرای LocalTunnel
+      run: |
+        npm install -g localtunnel
+        lt --port 7777 --subdomain lexusrp > tunnel.log &
         sleep 10
+        cat tunnel.log
 
-        echo "📄 ۲۰ خط آخر لاگ:"
-        tail -n 20 server.log || echo "⚠️ لاگی وجود ندارد"
+    - name: بروزرسانی آی‌پی در DuckDNS
+      run: |
+        curl "https://www.duckdns.org/update?domains=lexusrp&token=af9e1af2-cc2f-433d-816a-8c75fed13594&ip="
